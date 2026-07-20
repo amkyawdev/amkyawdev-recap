@@ -167,7 +167,7 @@ export default function SubtitleSettings() {
               <input
                 type="color"
                 value={settings.backgroundColor.startsWith('#') ? settings.backgroundColor : '#000000'}
-                onChange={(e) => handleSettingChange('backgroundColor', `${e.target.value}cc')}
+                onChange={(e) => handleSettingChange('backgroundColor', `${e.target.value}`)}
                 style={{ width: '50px', height: '36px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
               />
               <input
