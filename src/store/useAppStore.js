@@ -6,6 +6,7 @@ const useAppStore = create((set, get) => ({
     gemini: localStorage.getItem('gemini_api_key') || '',
     openai: localStorage.getItem('openai_api_key') || '',
     elevenlabs: localStorage.getItem('elevenlabs_api_key') || '',
+    whisper: localStorage.getItem('whisper_api_key') || '',
   },
   setApiKey: (provider, key) => {
     localStorage.setItem(`${provider}_api_key`, key);

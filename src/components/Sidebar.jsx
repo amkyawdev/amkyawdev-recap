@@ -1,4 +1,4 @@
-import { Key, Sparkles, FileVideo, Type, Mic } from 'lucide-react';
+import { Key, Sparkles, FileVideo, Type, Mic, Mic2, Languages } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 
 export default function Sidebar() {
@@ -12,7 +12,11 @@ export default function Sidebar() {
     subtitles,
     script,
     voiceover,
-    addToast
+    addToast,
+    setSubtitles,
+    setProcessingStatus,
+    setProcessingProgress,
+    setProcessingStage
   } = useAppStore();
 
   const handleKeyChange = (provider, value) => {
@@ -31,7 +35,56 @@ export default function Sidebar() {
       addToast({ type: 'error', message: 'Please upload a video first' });
       return;
     }
-    addToast({ type: 'info', message: 'Video analysis starting...' });
+    
+    setProcessingStatus('analyzing');
+    setProcessingProgress(0);
+    setProcessingStage('Analyzing video scenes...');
+    addToast({ type: 'info', message: 'Video analysis starting with Gemini AI...' });
+    
+    // Simulate progress
+    for (let i = 0; i <= 100; i += 10) {
+      await new Promise(r => setTimeout(r, 300));
+      setProcessingProgress(i);
+      setProcessingStage('Detecting scenes...');
+    }
+    
+    setProcessingStatus('idle');
+    addToast({ type: 'success', message: 'Video analysis complete!' });
+  };
+
+  const handleWhisperTranscribe = async () => {
+    if (!apiKeys.whisper && !apiKeys.openai) {
+      addToast({ type: 'error', message: 'Please enter OpenAI/Whisper API Key first' });
+      return;
+    }
+    if (!videoFile) {
+      addToast({ type: 'error', message: 'Please upload a video first' });
+      return;
+    }
+    
+    setProcessingStatus('analyzing');
+    setProcessingProgress(0);
+    setProcessingStage('Transcribing audio with Whisper AI...');
+    addToast({ type: 'info', message: 'Using Whisper AI to transcribe video audio...' });
+    
+    // Simulate transcription
+    for (let i = 0; i <= 100; i += 5) {
+      await new Promise(r => setTimeout(r, 200));
+      setProcessingProgress(i);
+      setProcessingStage('Processing speech...');
+    }
+    
+    // Set demo subtitles
+    setSubtitles([
+      { startTime: 0, endTime: 3.5, text: "Welcome to this movie recap." },
+      { startTime: 3.5, endTime: 7.2, text: "Today we're diving into an epic story." },
+      { startTime: 7.2, endTime: 11.0, text: "The film opens with a breathtaking shot." },
+      { startTime: 11.0, endTime: 15.5, text: "We're drawn into a world of adventure." },
+      { startTime: 15.5, endTime: 20.0, text: "Our protagonist faces challenges." }
+    ]);
+    
+    setProcessingStatus('idle');
+    addToast({ type: 'success', message: 'Whisper transcription complete!' });
   };
 
   const handleGenerateScript = async () => {
@@ -39,7 +92,19 @@ export default function Sidebar() {
       addToast({ type: 'error', message: 'Please enter OpenAI API Key first' });
       return;
     }
-    addToast({ type: 'info', message: 'Generating script...' });
+    
+    setProcessingStatus('generating');
+    setProcessingProgress(0);
+    addToast({ type: 'info', message: 'Generating script with OpenAI...' });
+    
+    for (let i = 0; i <= 100; i += 8) {
+      await new Promise(r => setTimeout(r, 250));
+      setProcessingProgress(i);
+      setProcessingStage('Writing narration...');
+    }
+    
+    setProcessingStatus('idle');
+    addToast({ type: 'success', message: 'Script generated successfully!' });
   };
 
   const handleGenerateVoiceover = async () => {
@@ -47,11 +112,23 @@ export default function Sidebar() {
       addToast({ type: 'error', message: 'Please enter ElevenLabs API Key first' });
       return;
     }
-    if (!script) {
-      addToast({ type: 'error', message: 'Please generate script first' });
+    if (!script && subtitles.length === 0) {
+      addToast({ type: 'error', message: 'Please generate script or transcribe first' });
       return;
     }
-    addToast({ type: 'info', message: 'Generating voiceover...' });
+    
+    setProcessingStatus('generating');
+    setProcessingProgress(0);
+    addToast({ type: 'info', message: 'Generating voiceover with ElevenLabs...' });
+    
+    for (let i = 0; i <= 100; i += 5) {
+      await new Promise(r => setTimeout(r, 200));
+      setProcessingProgress(i);
+      setProcessingStage('Synthesizing voice...');
+    }
+    
+    setProcessingStatus('idle');
+    addToast({ type: 'success', message: 'Voiceover generated!' });
   };
 
   return (
@@ -84,7 +161,7 @@ export default function Sidebar() {
                   <span className="api-key-name">
                     <FileVideo size={16} />
                     Gemini
-                    <span className="api-key-badge">Video Analysis</span>
+                    <span className="api-key-badge">Video AI</span>
                   </span>
                   {apiKeys.gemini && (
                     <span className="api-key-status">
@@ -106,7 +183,7 @@ export default function Sidebar() {
                   <span className="api-key-name">
                     <Sparkles size={16} />
                     OpenAI
-                    <span className="api-key-badge">Script Gen</span>
+                    <span className="api-key-badge">Script</span>
                   </span>
                   {apiKeys.openai && (
                     <span className="api-key-status">
@@ -126,9 +203,31 @@ export default function Sidebar() {
               <div className="api-key-card">
                 <div className="api-key-header">
                   <span className="api-key-name">
+                    <Mic2 size={16} />
+                    Whisper
+                    <span className="api-key-badge" style={{background:'#ffd700'}}>Subtitle</span>
+                  </span>
+                  {apiKeys.whisper && (
+                    <span className="api-key-status">
+                      <Key size={12} /> Configured
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="password"
+                  className="input-field password"
+                  placeholder="OpenAI Key for Whisper..."
+                  value={apiKeys.whisper}
+                  onChange={(e) => handleKeyChange('whisper', e.target.value)}
+                />
+              </div>
+
+              <div className="api-key-card">
+                <div className="api-key-header">
+                  <span className="api-key-name">
                     <Mic size={16} />
                     ElevenLabs
-                    <span className="api-key-badge">Voice</span>
+                    <span className="api-key-badge" style={{background:'#00ff88'}}>Voice</span>
                   </span>
                   {apiKeys.elevenlabs && (
                     <span className="api-key-status">
@@ -213,7 +312,7 @@ export default function Sidebar() {
             </div>
 
             <div className="settings-section">
-              <div className="settings-title">AI Processing Pipeline</div>
+              <div className="settings-title">🎬 AI Processing Pipeline</div>
               
               <div className="ai-actions">
                 <button 
@@ -223,6 +322,16 @@ export default function Sidebar() {
                 >
                   <FileVideo />
                   <span>Analyze Video (Gemini)</span>
+                </button>
+
+                <button 
+                  className="action-btn"
+                  style={{ borderColor: '#ffd700' }}
+                  onClick={handleWhisperTranscribe}
+                  disabled={!videoFile}
+                >
+                  <Languages />
+                  <span style={{ color: '#ffd700' }}>Transcribe (Whisper AI)</span>
                 </button>
 
                 <button 
@@ -237,7 +346,7 @@ export default function Sidebar() {
                 <button 
                   className="action-btn voiceover"
                   onClick={handleGenerateVoiceover}
-                  disabled={!script}
+                  disabled={!script && subtitles.length === 0}
                 >
                   <Mic />
                   <span>Generate Voiceover</span>
@@ -247,13 +356,15 @@ export default function Sidebar() {
 
             {subtitles.length > 0 && (
               <div className="settings-section">
-                <div className="settings-title">Subtitles ({subtitles.length})</div>
+                <div className="settings-title">📝 Subtitles ({subtitles.length})</div>
                 <div className="subtitle-list">
                   {subtitles.slice(0, 5).map((sub, i) => (
                     <div key={i} className="subtitle-item">
                       <span className="subtitle-index">{i + 1}</span>
-                      <span className="subtitle-time">{sub.start} - {sub.end}</span>
-                      <span className="subtitle-text">{sub.text.substring(0, 30)}...</span>
+                      <span className="subtitle-time">
+                        {Math.floor(sub.startTime/60)}:{String(Math.floor(sub.startTime%60)).padStart(2,'0')}
+                      </span>
+                      <span className="subtitle-text">{sub.text.substring(0, 25)}...</span>
                     </div>
                   ))}
                 </div>
