@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Send, Bot, ShieldAlert, AlertCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Send, Bot, ShieldAlert, ChevronDown, Mail, Github, Globe } from 'lucide-react';
 
 const INITIAL_MESSAGE = {
   role: 'assistant',
@@ -14,12 +14,72 @@ I can help you with:
 Ask me anything about movie editing!`
 };
 
+// Simple markdown parser
+const parseMarkdown = (text) => {
+  let result = text;
+  // Bold
+  result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  result = result.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Code
+  result = result.replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+  // Line breaks
+  result = result.replace(/\n/g, '<br/>');
+  return result;
+};
+
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
+  const [showContact, setShowContact] = useState(false);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (isAnimating && displayedText) {
+      scrollToBottom();
+    }
+  }, [displayedText, isAnimating]);
+
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (container) {
+      const handleScroll = () => {
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
+      };
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
+  const animateText = (text, callback) => {
+    setIsAnimating(true);
+    setDisplayedText('');
+    let index = 0;
+    const speed = 15; // ms per character
+    
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        setDisplayedText(text.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(interval);
+        setIsAnimating(false);
+        if (callback) callback();
+      }
+    }, speed);
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -39,24 +99,31 @@ export default function AIAssistant() {
       
       const data = await response.json();
       
+      let responseText = '';
       if (data.success && data.message) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+        responseText = data.message;
       } else if (data.fallbackMessage) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.fallbackMessage }]);
-        if (data.error) {
-          setError(data.error);
-        }
+        responseText = data.fallbackMessage;
+        if (data.error) setError(data.error);
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
+      
+      setIsTyping(false);
+      
+      // Animate the response text
+      const assistantMessage = { role: 'assistant', content: responseText };
+      setMessages(prev => [...prev, assistantMessage]);
+      animateText(responseText);
+      
     } catch (err) {
       console.error('Chat error:', err);
       setError(err.message);
-      // Fallback to keyword-based responses
       const response = getKeywordResponse(input);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    } finally {
       setIsTyping(false);
+      const assistantMessage = { role: 'assistant', content: response };
+      setMessages(prev => [...prev, assistantMessage]);
+      animateText(response);
     }
   };
 
@@ -77,6 +144,8 @@ export default function AIAssistant() {
       return "📤 **Export Settings**:\n\n• Resolution: 720p, 1080p, 4K\n• Quality: Low, Medium, High\n• Format: MP4, WebM";
     } else if (lowerInput.includes('trim') || lowerInput.includes('split') || lowerInput.includes('cut')) {
       return "✂️ **Editing Tools**:\n\n• Trim - Adjust clip length\n• Split - Divide at specific points\n• Crop - Remove edges";
+    } else if (lowerInput.includes('contact') || lowerInput.includes('email') || lowerInput.includes('developer')) {
+      return "📧 **Contact Developer**\n\nClick the contact button below to get in touch!";
     } else {
       return "🤖 I'm specifically designed to help with AmkyawDev Recap movie editing features. Please ask something related to movie editing!";
     }
@@ -126,12 +195,12 @@ export default function AIAssistant() {
           position: 'fixed',
           bottom: '100px',
           right: '24px',
-          width: '380px',
-          maxHeight: '500px',
+          width: '400px',
+          height: '550px',
           background: 'var(--bg-surface)',
           borderRadius: '16px',
           border: '1px solid var(--border)',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
           zIndex: 999,
           display: 'flex',
           flexDirection: 'column',
@@ -152,23 +221,84 @@ export default function AIAssistant() {
                 {error ? '⚠️ Zhipu AI Unavailable' : '✨ Powered by Zhipu AI'}
               </p>
             </div>
-            <ShieldAlert 
-              size={20} 
-              color="rgba(255,255,255,0.8)" 
-              style={{ marginLeft: 'auto', cursor: 'help' }}
-              title="Powered by Zhipu AI (glm-4-flash). Only helps with AmkyawDev Recap features."
-            />
+            <button
+              onClick={() => setShowContact(!showContact)}
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 10px',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <Mail size={14} />
+              Contact
+            </button>
           </div>
 
+          {/* Contact Section */}
+          {showContact && (
+            <div style={{
+              padding: '16px',
+              background: 'var(--bg-elevated)',
+              borderBottom: '1px solid var(--border)',
+              animation: 'slideDown 0.3s ease'
+            }}>
+              <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>📬 Contact Developer</h4>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <a href="mailto:contact@amkyawdev.com" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 12px', background: 'var(--bg-surface)',
+                  borderRadius: '8px', color: 'var(--text-primary)',
+                  textDecoration: 'none', fontSize: '0.8rem',
+                  border: '1px solid var(--border)',
+                  transition: 'all 0.2s'
+                }}>
+                  <Mail size={14} /> Email
+                </a>
+                <a href="https://github.com/amkyawdev" target="_blank" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 12px', background: 'var(--bg-surface)',
+                  borderRadius: '8px', color: 'var(--text-primary)',
+                  textDecoration: 'none', fontSize: '0.8rem',
+                  border: '1px solid var(--border)',
+                  transition: 'all 0.2s'
+                }}>
+                  <Github size={14} /> GitHub
+                </a>
+                <a href="https://amkyawdev.com" target="_blank" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 12px', background: 'var(--bg-surface)',
+                  borderRadius: '8px', color: 'var(--text-primary)',
+                  textDecoration: 'none', fontSize: '0.8rem',
+                  border: '1px solid var(--border)',
+                  transition: 'all 0.2s'
+                }}>
+                  <Globe size={14} /> Website
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* Messages */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px'
-          }}>
+          <div 
+            ref={chatContainerRef}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              position: 'relative'
+            }}
+          >
             {messages.map((msg, i) => (
               <div 
                 key={i}
@@ -177,16 +307,35 @@ export default function AIAssistant() {
                   borderRadius: '12px',
                   maxWidth: '85%',
                   background: msg.role === 'assistant' ? 'var(--bg-elevated)' : 'var(--accent-primary)',
-                  color: 'white',
+                  color: msg.role === 'assistant' ? 'var(--text-primary)' : 'white',
                   alignSelf: msg.role === 'assistant' ? 'flex-start' : 'flex-end',
-                  whiteSpace: 'pre-wrap',
                   fontSize: '0.9rem',
-                  lineHeight: '1.5'
+                  lineHeight: '1.6'
                 }}
               >
-                {msg.content}
+                {/* Thinking indicator */}
+                {msg.role === 'assistant' && i === messages.length - 1 && isAnimating && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--text-muted)',
+                    marginBottom: '8px',
+                    padding: '4px 8px',
+                    background: 'rgba(0,0,0,0.1)',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    animation: 'pulse 1.5s infinite'
+                  }}>
+                    <think>thinking...</think>
+                  </div>
+                )}
+                <div 
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(msg.role === 'assistant' && i === messages.length - 1 && isAnimating ? displayedText : msg.content) }}
+                  style={{ whiteSpace: 'pre-wrap' }}
+                />
               </div>
             ))}
+            
+            {/* Typing indicator */}
             {isTyping && (
               <div style={{
                 padding: '12px',
@@ -194,12 +343,43 @@ export default function AIAssistant() {
                 background: 'var(--bg-elevated)',
                 alignSelf: 'flex-start',
                 display: 'flex',
-                gap: '4px'
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                <span style={{ animation: 'bounce 1s infinite', fontSize: '1.2rem' }}>•</span>
-                <span style={{ animation: 'bounce 1s infinite 0.2s', fontSize: '1.2rem' }}>•</span>
-                <span style={{ animation: 'bounce 1s infinite 0.4s', fontSize: '1.2rem' }}>•</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>thinking...</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <span style={{ animation: 'bounce 1s infinite', fontSize: '1rem' }}>•</span>
+                  <span style={{ animation: 'bounce 1s infinite 0.2s', fontSize: '1rem' }}>•</span>
+                  <span style={{ animation: 'bounce 1s infinite 0.4s', fontSize: '1rem' }}>•</span>
+                </div>
               </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+            
+            {/* Scroll to bottom button */}
+            {showScrollBtn && (
+              <button
+                onClick={scrollToBottom}
+                style={{
+                  position: 'absolute',
+                  bottom: '80px',
+                  right: '16px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'var(--accent-primary)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 10px rgba(255, 51, 102, 0.3)',
+                  animation: 'fadeIn 0.2s ease'
+                }}
+              >
+                <ChevronDown size={18} color="white" />
+              </button>
             )}
           </div>
 
@@ -253,6 +433,22 @@ export default function AIAssistant() {
         @keyframes bounce {
           0%, 100% { opacity: 0.3; transform: translateY(0); }
           50% { opacity: 1; transform: translateY(-4px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; max-height: 0; }
+          to { opacity: 1; max-height: 200px; }
+        }
+        think {
+          font-family: monospace;
+          color: var(--accent-secondary);
         }
       `}</style>
     </>
