@@ -1,12 +1,4 @@
 import { useState } from 'react';
-import { 
-  Key, Sparkles, FileVideo, Type, Mic, Languages, 
-  ChevronRight, PanelLeftClose, PanelLeft, 
-  Scissors, Crop, RotateCcw, FlipHorizontal, Volume2,
-  Music, Layers, Download, Play, Pause, SkipBack, SkipForward,
-  Plus, Trash2, Copy, MessageSquare, Clock, Maximize, Minimize,
-  Upload, FileText
-} from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 
 export default function Sidebar() {
@@ -29,18 +21,18 @@ export default function Sidebar() {
     setSelectedVoice
   } = useAppStore();
 
-  const [collapsed, setCollapsed] = useState(true); // Default: closed
+  const [collapsed, setCollapsed] = useState(true);
   const [expandedSections, setExpandedSections] = useState({
-    api: true,
-    export: true,
+    api: false,
+    export: false,
     editing: true,
-    effects: true,
+    effects: false,
     audio: true,
-    subtitles: true,
-    srtupload: true
+    subtitles: false,
+    srtupload: false,
+    ai: true
   });
 
-  // Editing state
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [volume, setVolume] = useState(100);
 
@@ -56,6 +48,10 @@ export default function Sidebar() {
     if (value.length > 10) {
       addToast({ type: 'success', message: `${provider.toUpperCase()} API key saved` });
     }
+  };
+
+  const handleSpeed = (speed) => {
+    setPlaybackSpeed(speed);
   };
 
   const handleAnalyze = async () => {
@@ -224,13 +220,13 @@ export default function Sidebar() {
         onClick={() => setCollapsed(!collapsed)}
         style={{
           position: 'fixed',
-          left: collapsed ? '10px' : '260px',
+          left: collapsed ? '10px' : '270px',
           top: '60px',
           zIndex: 101,
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '6px',
+          padding: '8px',
           cursor: 'pointer',
           transition: 'left 0.3s ease',
           display: 'flex',
@@ -240,12 +236,12 @@ export default function Sidebar() {
           boxShadow: 'var(--shadow-lg)'
         }}
       >
-        {collapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+        <i className={`bi ${collapsed ? 'bi-chevron-double-right' : 'bi-chevron-double-left'}`}></i>
       </button>
 
       <aside 
         style={{
-          width: collapsed ? '0' : '250px',
+          width: collapsed ? '0' : '260px',
           overflow: 'hidden',
           transition: 'width 0.3s ease',
           background: 'var(--bg-surface)',
@@ -254,255 +250,227 @@ export default function Sidebar() {
           flexDirection: 'column'
         }}
       >
-        <div className="sidebar-tabs">
+        <div style={{ display: 'flex', gap: '4px', padding: '12px', borderBottom: '1px solid var(--border)' }}>
           <button 
-            className={`sidebar-tab ${activePanel === 'settings' ? 'active' : ''}`}
             onClick={() => setActivePanel('settings')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px',
+              background: activePanel === 'settings' ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+              border: 'none',
+              borderRadius: '8px',
+              color: activePanel === 'settings' ? '#fff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '0.85rem'
+            }}
           >
-            <Key size={16} />
-            {!collapsed && 'Settings'}
+            <i className="bi bi-gear-fill"></i>
+            <span>Settings</span>
           </button>
           <button 
-            className={`sidebar-tab ${activePanel === 'editor' ? 'active' : ''}`}
             onClick={() => setActivePanel('editor')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px',
+              background: activePanel === 'editor' ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+              border: 'none',
+              borderRadius: '8px',
+              color: activePanel === 'editor' ? '#fff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '0.85rem'
+            }}
           >
-            <Scissors size={16} />
-            {!collapsed && 'Editor'}
+            <i className="bi bi-scissors"></i>
+            <span>Editor</span>
           </button>
         </div>
 
-        <div className="sidebar-content" style={{ opacity: collapsed ? 0 : 1 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px', opacity: collapsed ? 0 : 1 }}>
           {activePanel === 'settings' && (
-            <>
-              {/* API Keys Section */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('api')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>🔐 API Configuration</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.api ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.api && (
-                  <div>
-                    {[
-                      { key: 'gemini', name: 'Gemini', badge: 'Video AI', color: '#00d4ff', placeholder: 'AIza...' },
-                      { key: 'openai', name: 'OpenAI', badge: 'Script', color: '#ff3366', placeholder: 'sk-...' },
-                      { key: 'whisper', name: 'Whisper', badge: 'Subtitle', color: '#ffd700', placeholder: 'sk-...' },
-                      { key: 'elevenlabs', name: 'ElevenLabs', badge: 'Voice', color: '#00ff88', placeholder: '...' }
-                    ].map(({ key, name, badge, color, placeholder }) => (
-                      <div key={key} className="api-key-card">
-                        <div className="api-key-header">
-                          <span className="api-key-name">
-                            <span style={{ color }}>{name}</span>
-                            <span className="api-key-badge" style={{ background: color, color: '#000' }}>{badge}</span>
-                          </span>
-                          {apiKeys[key] && <span className="api-key-status">✓</span>}
-                        </div>
-                        <input type="password" className="input-field password" placeholder={placeholder} value={apiKeys[key]} onChange={(e) => handleKeyChange(key, e.target.value)} />
-                      </div>
-                    ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* API Configuration */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-key"></i> API Keys</span>
+                </div>
+                {[
+                  { key: 'gemini', name: 'Gemini', color: '#00d4ff', placeholder: 'AIza...' },
+                  { key: 'openai', name: 'OpenAI', color: '#ff3366', placeholder: 'sk-...' },
+                  { key: 'whisper', name: 'Whisper', color: '#ffd700', placeholder: 'sk-...' },
+                  { key: 'elevenlabs', name: 'ElevenLabs', color: '#00ff88', placeholder: '...' }
+                ].map(({ key, name, color, placeholder }) => (
+                  <div key={key} style={{ marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.75rem', color: color, display: 'block', marginBottom: '4px' }}>{name}</label>
+                    <input 
+                      type="password" 
+                      placeholder={placeholder} 
+                      value={apiKeys[key]} 
+                      onChange={(e) => handleKeyChange(key, e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.8rem'
+                      }}
+                    />
                   </div>
-                )}
+                ))}
               </div>
 
               {/* Export Settings */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('export')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>📤 Export</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.export ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.export && (
-                  <div className="card">
-                    <div className="export-options">
-                      <div className="export-option"><label>Resolution</label><select><option>720p</option><option>1080p</option><option>4K</option></select></div>
-                      <div className="export-option"><label>Quality</label><select><option>Low</option><option>Medium</option><option>High</option></select></div>
-                      <div className="export-option"><label>Format</label><select><option>MP4</option><option>WebM</option></select></div>
-                    </div>
-                    <div className="checkbox-group"><input type="checkbox" id="s1" defaultChecked /><label htmlFor="s1">Subtitles</label></div>
-                    <div className="checkbox-group"><input type="checkbox" id="s2" defaultChecked /><label htmlFor="s2">Voiceover</label></div>
-                  </div>
-                )}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-download"></i> Export</span>
+                </div>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  <select style={{ padding: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                    <option>720p</option><option selected>1080p</option><option>4K</option>
+                  </select>
+                  <select style={{ padding: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                    <option>Low</option><option selected>Medium</option><option>High</option>
+                  </select>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {activePanel === 'editor' && (
-            <>
-              {/* 🎬 Basic Editing Tools */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('editing')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>✂️ Basic Editing</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.editing ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.editing && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '12px' }}>
-                    {[
-                      { icon: Scissors, label: 'Trim', action: handleTrim },
-                      { icon: Copy, label: 'Split', action: handleSplit },
-                      { icon: Crop, label: 'Crop', action: handleCrop },
-                      { icon: RotateCcw, label: 'Rotate', action: handleRotate },
-                      { icon: FlipHorizontal, label: 'Flip', action: handleFlip },
-                      { icon: Trash2, label: 'Delete', action: () => addToast({ type: 'warning', message: 'Select item to delete' }) }
-                    ].map(({ icon: Icon, label, action }) => (
-                      <button key={label} onClick={action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 4px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', transition: 'all 0.2s', minHeight: '50px' }} title={label}>
-                        <Icon size={16} />
-                        <span style={{ fontSize: '0.6rem' }}>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 📄 SRT Upload */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('srtupload')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>📄 SRT Upload</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.srtupload ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.srtupload && (
-                  <div className="card">
-                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '20px', border: '2px dashed var(--border)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => {
-                      e.preventDefault();
-                      const file = e.dataTransfer.files[0];
-                      if (file && file.name.endsWith('.srt')) {
-                        handleSRTUpload(file);
-                      } else {
-                        addToast({ type: 'error', message: 'Please upload .srt file' });
-                      }
-                    }}>
-                      <Upload size={24} color="var(--accent-primary)" />
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Drop SRT file here</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>or click to browse</span>
-                      <input type="file" accept=".srt" style={{ display: 'none' }} onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) handleSRTUpload(file);
-                      }} />
-                    </label>
-                    {subtitles.length > 0 && (
-                      <div style={{ marginTop: '12px', padding: '8px', background: 'var(--bg-elevated)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FileText size={16} color="var(--accent-primary)" />
-                        <span style={{ fontSize: '0.8rem' }}>{subtitles.length} subtitles loaded</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* 🎵 Audio Controls */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('audio')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>🎵 Audio Controls</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.audio ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.audio && (
-                  <div className="card">
-                    <div style={{ marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Volume</label>
-                        <span style={{ fontSize: '0.8rem' }}>{volume}%</span>
-                      </div>
-                      <input type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(e.target.value)} style={{ width: '100%', accentColor: 'var(--accent-primary)' }} />
-                    </div>
-                    
-                    <div style={{ marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Speed</label>
-                        <span style={{ fontSize: '0.8rem' }}>{playbackSpeed}x</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[0.25, 0.5, 1, 1.5, 2].map(speed => (
-                          <button key={speed} onClick={() => handleSpeed(speed)} style={{ flex: 1, padding: '6px', background: playbackSpeed === speed ? 'var(--accent-primary)' : 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', color: playbackSpeed === speed ? '#fff' : 'var(--text-primary)', fontSize: '0.75rem' }}>{speed}x</button>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Voice</label>
-                      <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)} style={{ width: '100%', padding: '8px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                        <option value="thita">သီဟ (Male - Burmese)</option>
-                        <option value="nila">နီလာ (Female - Burmese)</option>
-                        <option value="rachel">Rachel (Female)</option>
-                        <option value="domi">Domi (Female)</option>
-                        <option value="bella">Bella (Female)</option>
-                        <option value="antoni">Antoni (Male)</option>
-                        <option value="arnold">Arnold (Male)</option>
-                        <option value="adam">Adam (Male)</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* ✨ Effects */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('effects')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>✨ Effects</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.effects ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.effects && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                    {['Fade In', 'Fade Out', 'Blur', 'Brightness', 'Contrast', 'Saturation', 'Sepia', 'Grayscale'].map(effect => (
-                      <button key={effect} style={{ padding: '8px 4px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.7rem' }}>{effect}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 🤖 AI Processing */}
-              <div className="settings-section">
-                <button onClick={() => toggleSection('ai')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                  <span className="settings-title" style={{ margin: 0 }}>🤖 AI Tools</span>
-                  <ChevronRight size={16} style={{ transform: expandedSections.ai ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                </button>
-                
-                {expandedSections.ai && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button className="action-btn" style={{ borderColor: '#00d4ff', padding: '10px 12px' }} onClick={handleAnalyze} disabled={!videoFile}>
-                      <FileVideo size={16} style={{ color: '#00d4ff' }} />
-                      <span style={{ fontSize: '0.85rem' }}>Analyze (Gemini)</span>
-                    </button>
-                    <button className="action-btn" style={{ borderColor: '#ffd700', padding: '10px 12px' }} onClick={handleWhisperTranscribe} disabled={!videoFile}>
-                      <Languages size={16} style={{ color: '#ffd700' }} />
-                      <span style={{ fontSize: '0.85rem', color: '#ffd700' }}>Transcribe (Whisper)</span>
-                    </button>
-                    <button className="action-btn" style={{ borderColor: '#ff3366', padding: '10px 12px' }} onClick={handleGenerateScript} disabled={!videoFile}>
-                      <Sparkles size={16} style={{ color: '#ff3366' }} />
-                      <span style={{ fontSize: '0.85rem' }}>Generate Script</span>
-                    </button>
-                    <button className="action-btn" style={{ borderColor: '#00ff88', padding: '10px 12px' }} onClick={handleGenerateVoiceover} disabled={!videoFile}>
-                      <Mic size={16} style={{ color: '#00ff88' }} />
-                      <span style={{ fontSize: '0.85rem' }}>Voiceover</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* 📝 Subtitles */}
-              {subtitles.length > 0 && (
-                <div className="settings-section">
-                  <button onClick={() => toggleSection('subtitles')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
-                    <span className="settings-title" style={{ margin: 0 }}>📝 Subtitles ({subtitles.length})</span>
-                    <ChevronRight size={16} style={{ transform: expandedSections.subtitles ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                  </button>
-                  
-                  {expandedSections.subtitles && (
-                    <div className="subtitle-list">
-                      {subtitles.map((sub, i) => (
-                        <div key={i} className="subtitle-item">
-                          <span className="subtitle-index">{i + 1}</span>
-                          <span className="subtitle-time">{Math.floor(sub.startTime/60)}:{String(Math.floor(sub.startTime%60)).padStart(2,'0')}</span>
-                          <span className="subtitle-text">{sub.text.substring(0, 20)}...</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* AI Tools */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-robot"></i> AI Tools</span>
                 </div>
-              )}
-            </>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  <button onClick={handleAnalyze} disabled={!videoFile} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(0,212,255,0.1)', border: '1px solid #00d4ff', borderRadius: '8px', color: '#00d4ff', cursor: videoFile ? 'pointer' : 'not-allowed', opacity: videoFile ? 1 : 0.5 }}>
+                    <i className="bi bi-search"></i>
+                    <span style={{ fontSize: '0.85rem' }}>Analyze (Gemini)</span>
+                  </button>
+                  <button onClick={handleWhisperTranscribe} disabled={!videoFile} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(255,215,0,0.1)', border: '1px solid #ffd700', borderRadius: '8px', color: '#ffd700', cursor: videoFile ? 'pointer' : 'not-allowed', opacity: videoFile ? 1 : 0.5 }}>
+                    <i className="bi bi-mic"></i>
+                    <span style={{ fontSize: '0.85rem' }}>Transcribe (Whisper)</span>
+                  </button>
+                  <button onClick={handleGenerateScript} disabled={!videoFile} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(255,51,102,0.1)', border: '1px solid #ff3366', borderRadius: '8px', color: '#ff3366', cursor: videoFile ? 'pointer' : 'not-allowed', opacity: videoFile ? 1 : 0.5 }}>
+                    <i className="bi bi-stars"></i>
+                    <span style={{ fontSize: '0.85rem' }}>Generate Script</span>
+                  </button>
+                  <button onClick={handleGenerateVoiceover} disabled={!videoFile} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(0,255,136,0.1)', border: '1px solid #00ff88', borderRadius: '8px', color: '#00ff88', cursor: videoFile ? 'pointer' : 'not-allowed', opacity: videoFile ? 1 : 0.5 }}>
+                    <i className="bi bi-megaphone"></i>
+                    <span style={{ fontSize: '0.85rem' }}>Voiceover</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Editing Tools */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-tools"></i> Editing</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                  {[
+                    { icon: 'bi-scissors', label: 'Trim', action: handleTrim },
+                    { icon: 'bi-intersect', label: 'Split', action: handleSplit },
+                    { icon: 'bi-aspect-ratio', label: 'Crop', action: handleCrop },
+                    { icon: 'bi-arrow-clockwise', label: 'Rotate', action: handleRotate },
+                    { icon: 'bi-arrow-left-right', label: 'Flip', action: handleFlip },
+                    { icon: 'bi-trash', label: 'Delete', action: () => addToast({ type: 'warning', message: 'Select item to delete' }) }
+                  ].map(({ icon, label, action }) => (
+                    <button key={label} onClick={action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '10px 4px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                      <i className={icon} style={{ fontSize: '18px' }}></i>
+                      <span style={{ fontSize: '0.65rem' }}>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Audio Controls */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-volume-up"></i> Audio</span>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Volume</span>
+                    <span style={{ fontSize: '0.75rem' }}>{volume}%</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(e.target.value)} style={{ width: '100%', accentColor: 'var(--accent-primary)' }} />
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Speed</span>
+                    <span style={{ fontSize: '0.75rem' }}>{playbackSpeed}x</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[0.25, 0.5, 1, 1.5, 2].map(speed => (
+                      <button key={speed} onClick={() => handleSpeed(speed)} style={{ flex: 1, padding: '6px', background: playbackSpeed === speed ? 'var(--accent-primary)' : 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', color: playbackSpeed === speed ? '#fff' : 'var(--text-primary)', fontSize: '0.7rem' }}>{speed}x</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Voice</label>
+                  <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)} style={{ width: '100%', padding: '8px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                    <option value="thita">သီဟ (Male)</option>
+                    <option value="nila">နီလာ (Female)</option>
+                    <option value="rachel">Rachel (Female)</option>
+                    <option value="domi">Domi (Female)</option>
+                    <option value="antoni">Antoni (Male)</option>
+                    <option value="adam">Adam (Male)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* SRT Upload */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-file-earmark-text"></i> Subtitles</span>
+                </div>
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px', border: '2px dashed var(--border)', borderRadius: '8px', cursor: 'pointer' }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.name.endsWith('.srt')) {
+                    handleSRTUpload(file);
+                  } else {
+                    addToast({ type: 'error', message: 'Please upload .srt file' });
+                  }
+                }}>
+                  <i className="bi bi-cloud-arrow-up" style={{ fontSize: '24px', color: 'var(--accent-primary)' }}></i>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Drop SRT file here</span>
+                  <input type="file" accept=".srt" style={{ display: 'none' }} onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleSRTUpload(file);
+                  }} />
+                </label>
+                {subtitles.length > 0 && (
+                  <div style={{ marginTop: '8px', padding: '8px', background: 'var(--bg-surface)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="bi bi-check-circle" style={{ color: 'var(--success)' }}></i>
+                    <span style={{ fontSize: '0.75rem' }}>{subtitles.length} subtitles loaded</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Effects */}
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600' }}><i className="bi bi-magic"></i> Effects</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                  {['Fade In', 'Fade Out', 'Blur', 'Bright', 'Contrast', 'Saturate', 'Sepia', 'Gray'].map(effect => (
+                    <button key={effect} style={{ padding: '8px 4px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.7rem' }}>{effect}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </aside>
