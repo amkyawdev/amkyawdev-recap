@@ -16,7 +16,8 @@ export default function VideoPreview() {
     subtitles,
     setVideo,
     setActivePanel,
-    addToast
+    addToast,
+    videoMeta
   } = useAppStore();
 
   const [isDragging, setIsDragging] = useState(false);
@@ -27,6 +28,7 @@ export default function VideoPreview() {
       const url = URL.createObjectURL(file);
       setVideo(file, url, { duration: 0, width: 0, height: 0 });
       addToast({ type: 'success', message: 'Video uploaded successfully!' });
+      setActivePanel('editor');
     } else {
       addToast({ type: 'error', message: 'Please select a valid video file' });
     }

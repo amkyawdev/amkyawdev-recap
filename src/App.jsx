@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Film } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -11,14 +12,19 @@ import Footer from './components/Footer';
 import './index.css';
 
 function App() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+
   return (
     <div className="app">
       <Header />
       
       <div className="main-layout">
-        <Sidebar />
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         
-        <main className="workspace">
+        <main className="workspace" style={{
+          marginLeft: sidebarCollapsed ? '0' : '0',
+          transition: 'margin-left 0.3s ease'
+        }}>
           <VideoPreview />
           <Timeline />
           <ScriptEditor />

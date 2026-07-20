@@ -26,7 +26,7 @@ export default function Sidebar() {
     setProcessingStage
   } = useAppStore();
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true); // Default: closed
   const [expandedSections, setExpandedSections] = useState({
     api: true,
     export: true,
@@ -175,27 +175,28 @@ export default function Sidebar() {
         onClick={() => setCollapsed(!collapsed)}
         style={{
           position: 'fixed',
-          left: collapsed ? '10px' : '290px',
+          left: collapsed ? '10px' : '260px',
           top: '60px',
           zIndex: 101,
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '8px',
+          padding: '6px',
           cursor: 'pointer',
           transition: 'left 0.3s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--accent-primary)'
+          color: 'var(--accent-primary)',
+          boxShadow: 'var(--shadow-lg)'
         }}
       >
-        {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+        {collapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
       </button>
 
       <aside 
         style={{
-          width: collapsed ? '0' : '300px',
+          width: collapsed ? '0' : '250px',
           overflow: 'hidden',
           transition: 'width 0.3s ease',
           background: 'var(--bg-surface)',
@@ -286,20 +287,18 @@ export default function Sidebar() {
                 </button>
                 
                 {expandedSections.editing && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '12px' }}>
                     {[
                       { icon: Scissors, label: 'Trim', action: handleTrim },
                       { icon: Copy, label: 'Split', action: handleSplit },
                       { icon: Crop, label: 'Crop', action: handleCrop },
                       { icon: RotateCcw, label: 'Rotate', action: handleRotate },
                       { icon: FlipHorizontal, label: 'Flip', action: handleFlip },
-                      { icon: Maximize, label: 'Zoom In', action: () => {} },
-                      { icon: Minimize, label: 'Zoom Out', action: () => {} },
                       { icon: Trash2, label: 'Delete', action: () => addToast({ type: 'warning', message: 'Select item to delete' }) }
                     ].map(({ icon: Icon, label, action }) => (
-                      <button key={label} onClick={action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '12px 8px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-primary)', transition: 'all 0.2s' }} title={label}>
-                        <Icon size={18} />
-                        <span style={{ fontSize: '0.65rem' }}>{label}</span>
+                      <button key={label} onClick={action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 4px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', transition: 'all 0.2s', minHeight: '50px' }} title={label}>
+                        <Icon size={16} />
+                        <span style={{ fontSize: '0.6rem' }}>{label}</span>
                       </button>
                     ))}
                   </div>
@@ -358,9 +357,9 @@ export default function Sidebar() {
                 </button>
                 
                 {expandedSections.effects && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                    {['Fade In', 'Fade Out', 'Blur', 'Brightness', 'Contrast', 'Saturation'].map(effect => (
-                      <button key={effect} style={{ padding: '10px 8px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.75rem' }}>{effect}</button>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                    {['Fade In', 'Fade Out', 'Blur', 'Brightness', 'Contrast', 'Saturation', 'Sepia', 'Grayscale'].map(effect => (
+                      <button key={effect} style={{ padding: '8px 4px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--text-primary)', fontSize: '0.7rem' }}>{effect}</button>
                     ))}
                   </div>
                 )}
@@ -374,22 +373,22 @@ export default function Sidebar() {
                 </button>
                 
                 {expandedSections.ai && (
-                  <div className="ai-actions">
-                    <button className="action-btn" style={{ borderColor: '#00d4ff' }} onClick={handleAnalyze} disabled={!videoFile}>
-                      <FileVideo style={{ color: '#00d4ff' }} />
-                      <span>Analyze (Gemini)</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <button className="action-btn" style={{ borderColor: '#00d4ff', padding: '10px 12px' }} onClick={handleAnalyze} disabled={!videoFile}>
+                      <FileVideo size={16} style={{ color: '#00d4ff' }} />
+                      <span style={{ fontSize: '0.85rem' }}>Analyze (Gemini)</span>
                     </button>
-                    <button className="action-btn" style={{ borderColor: '#ffd700' }} onClick={handleWhisperTranscribe} disabled={!videoFile}>
-                      <Languages style={{ color: '#ffd700' }} />
-                      <span style={{ color: '#ffd700' }}>Transcribe</span>
+                    <button className="action-btn" style={{ borderColor: '#ffd700', padding: '10px 12px' }} onClick={handleWhisperTranscribe} disabled={!videoFile}>
+                      <Languages size={16} style={{ color: '#ffd700' }} />
+                      <span style={{ fontSize: '0.85rem', color: '#ffd700' }}>Transcribe (Whisper)</span>
                     </button>
-                    <button className="action-btn" style={{ borderColor: '#ff3366' }} onClick={handleGenerateScript} disabled={!videoFile}>
-                      <Sparkles style={{ color: '#ff3366' }} />
-                      <span>Generate Script</span>
+                    <button className="action-btn" style={{ borderColor: '#ff3366', padding: '10px 12px' }} onClick={handleGenerateScript} disabled={!videoFile}>
+                      <Sparkles size={16} style={{ color: '#ff3366' }} />
+                      <span style={{ fontSize: '0.85rem' }}>Generate Script</span>
                     </button>
-                    <button className="action-btn" style={{ borderColor: '#00ff88' }} onClick={handleGenerateVoiceover} disabled={!videoFile}>
-                      <Mic style={{ color: '#00ff88' }} />
-                      <span>Voiceover</span>
+                    <button className="action-btn" style={{ borderColor: '#00ff88', padding: '10px 12px' }} onClick={handleGenerateVoiceover} disabled={!videoFile}>
+                      <Mic size={16} style={{ color: '#00ff88' }} />
+                      <span style={{ fontSize: '0.85rem' }}>Voiceover</span>
                     </button>
                   </div>
                 )}
