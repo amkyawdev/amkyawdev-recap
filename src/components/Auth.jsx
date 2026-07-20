@@ -235,23 +235,6 @@ export default function Auth({ onClose, mode = 'login', onModeChange }) {
         maxWidth: '420px',
         position: 'relative'
       }}>
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <X size={20} />
-        </button>
-
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
