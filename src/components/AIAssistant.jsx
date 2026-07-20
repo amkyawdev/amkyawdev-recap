@@ -246,38 +246,38 @@ export default function AIAssistant() {
           {showContact && (
             <div style={{
               padding: '16px',
-              background: 'var(--bg-elevated)',
-              borderBottom: '1px solid var(--border)',
+              background: 'rgba(255,255,255,0.95)',
+              borderBottom: '1px solid rgba(0,0,0,0.1)',
               animation: 'slideDown 0.3s ease'
             }}>
-              <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>📬 Contact Developer</h4>
+              <h4 style={{ margin: '0 0 12px 0', color: '#000000', fontSize: '0.9rem' }}>📬 Contact Developer</h4>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <a href="mailto:contact@amkyawdev.com" style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 12px', background: 'var(--bg-surface)',
-                  borderRadius: '8px', color: 'var(--text-primary)',
+                  padding: '8px 12px', background: 'white',
+                  borderRadius: '8px', color: '#000000',
                   textDecoration: 'none', fontSize: '0.8rem',
-                  border: '1px solid var(--border)',
+                  border: '1px solid rgba(0,0,0,0.2)',
                   transition: 'all 0.2s'
                 }}>
                   <Mail size={14} /> Email
                 </a>
                 <a href="https://github.com/amkyawdev" target="_blank" style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 12px', background: 'var(--bg-surface)',
-                  borderRadius: '8px', color: 'var(--text-primary)',
+                  padding: '8px 12px', background: 'white',
+                  borderRadius: '8px', color: '#000000',
                   textDecoration: 'none', fontSize: '0.8rem',
-                  border: '1px solid var(--border)',
+                  border: '1px solid rgba(0,0,0,0.2)',
                   transition: 'all 0.2s'
                 }}>
                   <Github size={14} /> GitHub
                 </a>
                 <a href="https://amkyawdev.com" target="_blank" style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 12px', background: 'var(--bg-surface)',
-                  borderRadius: '8px', color: 'var(--text-primary)',
+                  padding: '8px 12px', background: 'white',
+                  borderRadius: '8px', color: '#000000',
                   textDecoration: 'none', fontSize: '0.8rem',
-                  border: '1px solid var(--border)',
+                  border: '1px solid rgba(0,0,0,0.2)',
                   transition: 'all 0.2s'
                 }}>
                   <Globe size={14} /> Website
@@ -306,21 +306,22 @@ export default function AIAssistant() {
                   padding: '12px',
                   borderRadius: '12px',
                   maxWidth: '85%',
-                  background: msg.role === 'assistant' ? 'var(--bg-elevated)' : 'var(--accent-primary)',
-                  color: msg.role === 'assistant' ? 'var(--text-primary)' : 'white',
+                  background: msg.role === 'assistant' ? 'rgba(255,255,255,0.9)' : 'var(--accent-primary)',
+                  color: msg.role === 'assistant' ? '#000000' : 'white',
                   alignSelf: msg.role === 'assistant' ? 'flex-start' : 'flex-end',
                   fontSize: '0.9rem',
-                  lineHeight: '1.6'
+                  lineHeight: '1.6',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
               >
                 {/* Thinking indicator */}
                 {msg.role === 'assistant' && i === messages.length - 1 && isAnimating && (
                   <div style={{
                     fontSize: '0.75rem',
-                    color: 'var(--text-muted)',
+                    color: '#666666',
                     marginBottom: '8px',
                     padding: '4px 8px',
-                    background: 'rgba(0,0,0,0.1)',
+                    background: 'rgba(0,0,0,0.08)',
                     borderRadius: '4px',
                     display: 'inline-block',
                     animation: 'pulse 1.5s infinite'
@@ -330,7 +331,7 @@ export default function AIAssistant() {
                 )}
                 <div 
                   dangerouslySetInnerHTML={{ __html: parseMarkdown(msg.role === 'assistant' && i === messages.length - 1 && isAnimating ? displayedText : msg.content) }}
-                  style={{ whiteSpace: 'pre-wrap' }}
+                  style={{ whiteSpace: 'pre-wrap', color: '#000000' }}
                 />
               </div>
             ))}
@@ -340,17 +341,18 @@ export default function AIAssistant() {
               <div style={{
                 padding: '12px',
                 borderRadius: '12px',
-                background: 'var(--bg-elevated)',
+                background: 'rgba(255,255,255,0.9)',
                 alignSelf: 'flex-start',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>thinking...</span>
+                <span style={{ fontSize: '0.75rem', color: '#666666' }}>thinking...</span>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <span style={{ animation: 'bounce 1s infinite', fontSize: '1rem' }}>•</span>
-                  <span style={{ animation: 'bounce 1s infinite 0.2s', fontSize: '1rem' }}>•</span>
-                  <span style={{ animation: 'bounce 1s infinite 0.4s', fontSize: '1rem' }}>•</span>
+                  <span style={{ animation: 'bounce 1s infinite', fontSize: '1rem', color: '#000' }}>•</span>
+                  <span style={{ animation: 'bounce 1s infinite 0.2s', fontSize: '1rem', color: '#000' }}>•</span>
+                  <span style={{ animation: 'bounce 1s infinite 0.4s', fontSize: '1rem', color: '#000' }}>•</span>
                 </div>
               </div>
             )}
@@ -368,17 +370,17 @@ export default function AIAssistant() {
                   width: '36px',
                   height: '36px',
                   borderRadius: '50%',
-                  background: 'var(--accent-primary)',
-                  border: 'none',
+                  background: 'rgba(255,255,255,0.95)',
+                  border: '1px solid rgba(0,0,0,0.2)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 2px 10px rgba(255, 51, 102, 0.3)',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
                   animation: 'fadeIn 0.2s ease'
                 }}
               >
-                <ChevronDown size={18} color="white" />
+                <ChevronDown size={18} color="#000" />
               </button>
             )}
           </div>
@@ -386,9 +388,10 @@ export default function AIAssistant() {
           {/* Input */}
           <div style={{
             padding: '12px',
-            borderTop: '1px solid var(--border)',
+            borderTop: '1px solid rgba(0,0,0,0.1)',
             display: 'flex',
-            gap: '8px'
+            gap: '8px',
+            background: 'rgba(255,255,255,0.95)'
           }}>
             <input
               type="text"
@@ -400,9 +403,9 @@ export default function AIAssistant() {
                 flex: 1,
                 padding: '10px 14px',
                 borderRadius: '20px',
-                border: '1px solid var(--border)',
-                background: 'var(--bg-elevated)',
-                color: 'var(--text-primary)',
+                border: '1px solid rgba(0,0,0,0.2)',
+                background: 'white',
+                color: '#000000',
                 fontSize: '0.9rem',
                 outline: 'none'
               }}
