@@ -162,11 +162,6 @@ export default function Sidebar() {
   const handleCrop = () => addToast({ type: 'info', message: 'Crop tool activated' });
   const handleRotate = () => addToast({ type: 'info', message: 'Rotate 90° clockwise' });
   const handleFlip = () => addToast({ type: 'info', message: 'Flip horizontal' });
-  const handleSpeed = (speed) => {
-    setPlaybackSpeed(speed);
-    addToast({ type: 'info', message: `Playback speed: ${speed}x` });
-  };
-
   // SRT file upload handler
   const handleSRTUpload = (file) => {
     const reader = new FileReader();
