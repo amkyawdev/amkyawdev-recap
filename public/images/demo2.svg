@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#12121a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff3366"/>
+      <stop offset="100%" style="stop-color:#00d4ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="800" height="50" fill="#12121a"/>
+  <rect x="20" y="12" width="30" height="26" rx="4" fill="url(#accent)"/>
+  <text x="60" y="33" fill="#f0f0f5" font-family="Arial Black" font-size="16">AMKYAWDEV RECAP</text>
+  <!-- Sidebar - AI Tools -->
+  <rect x="0" y="50" width="200" height="400" fill="#12121a"/>
+  <rect x="10" y="60" width="90" height="30" fill="none" stroke="#2a2a3a"/>
+  <rect x="100" y="60" width="90" height="30" fill="#1a1a24"/>
+  <rect x="104" y="64" width="82" height="22" fill="#ff3366"/>
+  <text x="30" y="80" fill="#8888a0" font-size="10">API Keys</text>
+  <text x="115" y="80" fill="#f0f0f5" font-size="10">AI Tools</text>
+  <!-- Video Info -->
+  <text x="15" y="110" fill="#8888a0" font-size="9">Video Information</text>
+  <rect x="15" y="120" width="170" height="70" rx="8" fill="#1a1a24"/>
+  <text x="25" y="140" fill="#f0f0f5" font-size="9">File: movie.mp4</text>
+  <text x="25" y="155" fill="#f0f0f5" font-size="9">Duration: 2:15:30</text>
+  <text x="25" y="170" fill="#f0f0f5" font-size="9">Size: 1.2 GB</text>
+  <!-- AI Processing -->
+  <text x="15" y="210" fill="#8888a0" font-size="9">AI Processing Pipeline</text>
+  <!-- Analyze Button -->
+  <rect x="15" y="225" width="170" height="45" rx="8" fill="#1a1a24" stroke="#ffd700"/>
+  <circle cx="35" cy="247" r="10" fill="#ffd700"/>
+  <text x="50" y="235" fill="#f0f0f5" font-size="10">Analyze Video</text>
+  <text x="50" y="248" fill="#8888a0" font-size="8">(Gemini)</text>
+  <!-- Script Button -->
+  <rect x="15" y="275" width="170" height="45" rx="8" fill="#1a1a24" stroke="#ff3366"/>
+  <circle cx="35" cy="297" r="10" fill="#ff3366"/>
+  <text x="50" y="285" fill="#f0f0f5" font-size="10">Generate Script</text>
+  <text x="50" y="298" fill="#8888a0" font-size="8">(OpenAI)</text>
+  <!-- Voiceover Button -->
+  <rect x="15" y="325" width="170" height="45" rx="8" fill="#1a1a24" stroke="#00ff88"/>
+  <circle cx="35" cy="347" r="10" fill="#00ff88"/>
+  <text x="50" y="335" fill="#f0f0f5" font-size="10">Generate Voiceover</text>
+  <text x="50" y="348" fill="#8888a0" font-size="8">(ElevenLabs)</text>
+  <!-- Main Workspace - Video Playing -->
+  <rect x="200" y="50" width="600" height="300" fill="#0a0a0f"/>
+  <rect x="220" y="70" width="560" height="200" rx="12" fill="#12121a" stroke="#2a2a3a"/>
+  <!-- Video playing -->
+  <rect x="230" y="80" width="540" height="180" rx="4" fill="#000"/>
+  <rect x="230" y="270" width="540" height="6" rx="3" fill="#1a1a24"/>
+  <rect x="230" y="270" width="350" height="6" rx="3" fill="url(#accent)"/>
+  <circle cx="580" cy="273" r="8" fill="#ff3366"/>
+  <!-- Playback controls -->
+  <rect x="240" y="285" width="30" height="25" rx="4" fill="#1a1a24"/>
+  <rect x="275" y="285" width="30" height="25" rx="4" fill="#1a1a24"/>
+  <text x="250" y="302" fill="#f0f0f5" font-size="12">|>|</text>
+  <text x="400" y="302" fill="#8888a0" font-size="10">00:45:30 / 02:15:30</text>
+  <!-- Subtitle overlay -->
+  <rect x="350" y="200" width="300" height="35" rx="4" fill="rgba(0,0,0,0.8)"/>
+  <text x="500" y="223" fill="white" font-size="12" text-anchor="middle">This is a subtitle example</text>
+  <!-- Timeline -->
+  <rect x="200" y="350" width="600" height="100" rx="12" fill="#12121a" stroke="#2a2a3a"/>
+  <text x="220" y="370" fill="#f0f0f5" font-size="10">Timeline</text>
+  <text x="700" y="370" fill="#8888a0" font-size="8">Zoom</text>
+  <!-- Timeline tracks with content -->
+  <rect x="280" y="380" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="380" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <rect x="290" y="380" width="300" height="15" rx="4" fill="#ff3366"/>
+  <rect x="280" y="400" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="400" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <rect x="290" y="400" width="280" height="15" rx="4" fill="#00ff88"/>
+  <rect x="280" y="420" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="420" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <rect x="300" y="420" width="40" height="15" rx="4" fill="#ffd700"/>
+  <rect x="350" y="420" width="50" height="15" rx="4" fill="#ffd700"/>
+  <rect x="410" y="420" width="35" height="15" rx="4" fill="#ffd700"/>
+  <!-- Footer -->
+  <rect x="0" y="400" width="800" height="50" fill="#12121a"/>
+  <circle cx="20" cy="425" r="4" fill="#ffaa00"/>
+  <text x="30" y="428" fill="#8888a0" font-size="9">Processing...</text>
+</svg>

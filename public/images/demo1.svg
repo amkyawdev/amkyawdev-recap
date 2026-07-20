@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#12121a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff3366"/>
+      <stop offset="100%" style="stop-color:#00d4ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="800" height="50" fill="#12121a"/>
+  <rect x="20" y="12" width="30" height="26" rx="4" fill="url(#accent)"/>
+  <text x="60" y="33" fill="#f0f0f5" font-family="Arial Black" font-size="16">AMKYAWDEV RECAP</text>
+  <rect x="650" y="12" width="80" height="26" rx="4" fill="#ff3366"/>
+  <rect x="740" y="12" width="50" height="26" rx="4" fill="none" stroke="#2a2a3a"/>
+  <!-- Sidebar -->
+  <rect x="0" y="50" width="200" height="400" fill="#12121a"/>
+  <rect x="10" y="60" width="90" height="30" fill="#1a1a24"/>
+  <rect x="100" y="60" width="90" height="30" fill="none" stroke="#2a2a3a"/>
+  <text x="30" y="80" fill="#8888a0" font-size="10">API Keys</text>
+  <text x="115" y="80" fill="#8888a0" font-size="10">AI Tools</text>
+  <!-- API Keys Cards -->
+  <rect x="15" y="110" width="170" height="80" rx="8" fill="#1a1a24"/>
+  <circle cx="30" cy="130" r="8" fill="#ff3366"/>
+  <text x="45" y="133" fill="#f0f0f5" font-size="11">Gemini</text>
+  <text x="15" y="155" fill="#8888a0" font-size="8">Video Analysis</text>
+  <rect x="15" y="165" width="170" height="20" rx="4" fill="#0a0a0f" stroke="#2a2a3a"/>
+  <text x="25" y="179" fill="#5a5a70" font-size="9">••••••••••••••••</text>
+  <!-- Main Workspace -->
+  <rect x="200" y="50" width="600" height="300" fill="#0a0a0f"/>
+  <!-- Video Preview -->
+  <rect x="220" y="70" width="560" height="200" rx="12" fill="#12121a" stroke="#2a2a3a"/>
+  <circle cx="500" cy="170" r="40" fill="#1a1a24" stroke="#ff3366"/>
+  <polygon points="490,150 490,190 525,170" fill="#ff3366"/>
+  <text x="480" y="220" fill="#8888a0" font-size="10">Upload Video</text>
+  <text x="460" y="240" fill="#5a5a70" font-size="8">Drag & Drop or Click</text>
+  <!-- Video Controls -->
+  <rect x="220" y="280" width="560" height="6" rx="3" fill="#1a1a24"/>
+  <rect x="220" y="280" width="200" height="6" rx="3" fill="url(#accent)"/>
+  <circle cx="420" cy="283" r="8" fill="#ff3366"/>
+  <rect x="230" y="295" width="100" height="25" rx="4" fill="#1a1a24"/>
+  <rect x="340" y="295" width="40" height="25" rx="4" fill="#1a1a24"/>
+  <rect x="450" y="295" width="40" height="25" rx="4" fill="#1a1a24"/>
+  <rect x="720" y="295" width="30" height="25" rx="4" fill="#1a1a24"/>
+  <!-- Timeline -->
+  <rect x="200" y="350" width="600" height="100" rx="12" fill="#12121a" stroke="#2a2a3a"/>
+  <text x="220" y="370" fill="#f0f0f5" font-size="10">Timeline</text>
+  <rect x="280" y="380" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="380" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <rect x="290" y="380" width="300" height="15" rx="4" fill="url(#accent)"/>
+  <text x="295" y="391" fill="white" font-size="8">video.mp4</text>
+  <rect x="280" y="400" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="400" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <rect x="280" y="420" width="60" height="15" fill="#2a2a3a"/>
+  <rect x="290" y="420" width="500" height="15" rx="4" fill="#1a1a24"/>
+  <!-- Footer -->
+  <rect x="0" y="400" width="800" height="50" fill="#12121a"/>
+  <circle cx="20" cy="425" r="4" fill="#00ff88"/>
+  <text x="30" y="428" fill="#8888a0" font-size="9">Ready</text>
+  <text x="700" y="428" fill="#8888a0" font-size="9">Local Mode</text>
+</svg>
