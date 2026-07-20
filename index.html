@@ -8,13 +8,16 @@
     <meta name="theme-color" content="#0a0a0f" />
     <title>AmkyawDev Recap - AI Movie Recap Generator</title>
     
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <script>
-      // Firebase Config from Environment Variables
+      // Firebase Config
       const firebaseConfig = {
         apiKey: "AIzaSyCcw0_7Pc4tIAapg-Hyvk4UtiQfo1USjU8",
         authDomain: "amk-apk.firebaseapp.com",
@@ -26,7 +29,6 @@
         measurementId: "G-E2658JJ29R"
       };
       
-      // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
     </script>
   </head>

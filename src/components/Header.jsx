@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Film, Settings, Download, User, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Film } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import Auth from './Auth';
 
@@ -18,7 +18,6 @@ export default function Header() {
       }
     }
     
-    // Listen for Firebase auth state changes
     if (typeof firebase !== 'undefined') {
       firebase.auth().onAuthStateChanged((firebaseUser) => {
         if (firebaseUser) {
@@ -66,18 +65,18 @@ export default function Header() {
             <button 
               className="btn btn-secondary"
               onClick={() => openAuth('login')}
-              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              title="Login"
+              style={{ padding: '8px 12px' }}
             >
-              <LogIn size={16} />
-              <span>Login</span>
+              <i className="bi bi-box-arrow-in-right"></i>
             </button>
             <button 
               className="btn btn-primary"
               onClick={() => openAuth('register')}
-              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              title="Register"
+              style={{ padding: '8px 12px' }}
             >
-              <UserPlus size={16} />
-              <span>Register</span>
+              <i className="bi bi-person-plus"></i>
             </button>
           </>
         ) : (
@@ -90,7 +89,7 @@ export default function Header() {
             borderRadius: 'var(--radius-md)',
             fontSize: '0.8rem'
           }}>
-            <User size={14} />
+            <i className="bi bi-person-circle" style={{ fontSize: '18px' }}></i>
             <span>{user.name || user.email?.split('@')[0]}</span>
             <button 
               onClick={handleLogout}
@@ -104,7 +103,7 @@ export default function Header() {
               }}
               title="Logout"
             >
-              <LogOut size={14} />
+              <i className="bi bi-box-arrow-right"></i>
             </button>
           </div>
         )}
@@ -112,19 +111,19 @@ export default function Header() {
         <button 
           className="btn btn-secondary"
           onClick={() => setActivePanel('settings')}
-          style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+          title="Settings"
+          style={{ padding: '8px 12px' }}
         >
-          <Settings size={16} />
-          <span>Settings</span>
+          <i className="bi bi-gear"></i>
         </button>
         
         <button 
           className="btn btn-primary"
           disabled={!videoFile || processingStatus !== 'idle' || !user}
-          style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+          title="Export"
+          style={{ padding: '8px 12px' }}
         >
-          <Download size={16} />
-          <span>Export</span>
+          <i className="bi bi-download"></i>
         </button>
       </div>
 
