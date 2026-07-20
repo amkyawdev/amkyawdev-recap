@@ -4,7 +4,8 @@ import {
   ChevronRight, PanelLeftClose, PanelLeft, 
   Scissors, Crop, RotateCcw, FlipHorizontal, Volume2,
   Music, Layers, Download, Play, Pause, SkipBack, SkipForward,
-  Plus, Trash2, Copy, MessageSquare, Clock, Maximize, Minimize
+  Plus, Trash2, Copy, MessageSquare, Clock, Maximize, Minimize,
+  Upload, FileText
 } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 
@@ -23,7 +24,9 @@ export default function Sidebar() {
     setSubtitles,
     setProcessingStatus,
     setProcessingProgress,
-    setProcessingStage
+    setProcessingStage,
+    selectedVoice,
+    setSelectedVoice
   } = useAppStore();
 
   const [collapsed, setCollapsed] = useState(true); // Default: closed
@@ -33,11 +36,11 @@ export default function Sidebar() {
     editing: true,
     effects: true,
     audio: true,
-    subtitles: true
+    subtitles: true,
+    srtupload: true
   });
 
   // Editing state
-  const [selectedVoice, setSelectedVoice] = useState('rachel');
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [volume, setVolume] = useState(100);
 
@@ -166,6 +169,52 @@ export default function Sidebar() {
   const handleSpeed = (speed) => {
     setPlaybackSpeed(speed);
     addToast({ type: 'info', message: `Playback speed: ${speed}x` });
+  };
+
+  // SRT file upload handler
+  const handleSRTUpload = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      const parsed = parseSRT(content);
+      if (parsed.length > 0) {
+        setSubtitles(parsed);
+        addToast({ type: 'success', message: `${parsed.length} subtitles imported from SRT` });
+      } else {
+        addToast({ type: 'error', message: 'Failed to parse SRT file' });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Parse SRT content to subtitles array
+  const parseSRT = (srtContent) => {
+    const subtitles = [];
+    const blocks = srtContent.trim().split(/\n\n+/);
+    
+    for (const block of blocks) {
+      const lines = block.split('\n');
+      if (lines.length >= 3) {
+        const timeLine = lines[1];
+        const textLines = lines.slice(2);
+        const text = textLines.join('\n');
+        
+        const timeMatch = timeLine.match(/(\d{2}):(\d{2}):(\d{2})[,.](\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/);
+        
+        if (timeMatch) {
+          const startTime = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]) + parseInt(timeMatch[4]) / 1000;
+          const endTime = parseInt(timeMatch[5]) * 3600 + parseInt(timeMatch[6]) * 60 + parseInt(timeMatch[7]) + parseInt(timeMatch[8]) / 1000;
+          
+          subtitles.push({
+            startTime: Math.round(startTime * 100) / 100,
+            endTime: Math.round(endTime * 100) / 100,
+            text: text.trim()
+          });
+        }
+      }
+    }
+    
+    return subtitles;
   };
 
   return (
@@ -305,6 +354,42 @@ export default function Sidebar() {
                 )}
               </div>
 
+              {/* 📄 SRT Upload */}
+              <div className="settings-section">
+                <button onClick={() => toggleSection('srtupload')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
+                  <span className="settings-title" style={{ margin: 0 }}>📄 SRT Upload</span>
+                  <ChevronRight size={16} style={{ transform: expandedSections.srtupload ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                </button>
+                
+                {expandedSections.srtupload && (
+                  <div className="card">
+                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '20px', border: '2px dashed var(--border)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
+                      if (file && file.name.endsWith('.srt')) {
+                        handleSRTUpload(file);
+                      } else {
+                        addToast({ type: 'error', message: 'Please upload .srt file' });
+                      }
+                    }}>
+                      <Upload size={24} color="var(--accent-primary)" />
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Drop SRT file here</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>or click to browse</span>
+                      <input type="file" accept=".srt" style={{ display: 'none' }} onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) handleSRTUpload(file);
+                      }} />
+                    </label>
+                    {subtitles.length > 0 && (
+                      <div style={{ marginTop: '12px', padding: '8px', background: 'var(--bg-elevated)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={16} color="var(--accent-primary)" />
+                        <span style={{ fontSize: '0.8rem' }}>{subtitles.length} subtitles loaded</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* 🎵 Audio Controls */}
               <div className="settings-section">
                 <button onClick={() => toggleSection('audio')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '12px' }}>
@@ -337,6 +422,8 @@ export default function Sidebar() {
                     <div>
                       <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Voice</label>
                       <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)} style={{ width: '100%', padding: '8px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                        <option value="thita">သီဟ (Female - Burmese)</option>
+                        <option value="nila">နီလာ (Female - Burmese)</option>
                         <option value="rachel">Rachel (Female)</option>
                         <option value="domi">Domi (Female)</option>
                         <option value="bella">Bella (Female)</option>

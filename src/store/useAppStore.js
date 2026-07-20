@@ -40,9 +40,11 @@ const useAppStore = create((set, get) => ({
   subtitles: [],
   voiceover: null,
   script: '',
+  selectedVoice: 'thita',
   setSubtitles: (subs) => set({ subtitles: subs }),
   setVoiceover: (vo) => set({ voiceover: vo }),
   setScript: (script) => set({ script: script }),
+  setSelectedVoice: (voice) => set({ selectedVoice: voice }),
 
   // Processing State
   processingStatus: 'idle', // idle, analyzing, generating, rendering

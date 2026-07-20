@@ -381,6 +381,8 @@ app.get('/api/progress/:jobId', (req, res) => {
 // Get available voices from ElevenLabs
 app.get('/api/voices', async (req, res) => {
   const voices = [
+    { id: 'thita', name: 'သီဟ (Thita)', gender: 'female', language: 'burmese', preview: 'voice_thita.mp3' },
+    { id: 'nila', name: 'နီလာ (Nila)', gender: 'female', language: 'burmese', preview: 'voice_nila.mp3' },
     { id: 'rachel', name: 'Rachel', gender: 'female', preview: 'voice_rachel.mp3' },
     { id: 'domi', name: 'Domi', gender: 'female', preview: 'voice_domi.mp3' },
     { id: 'bella', name: 'Bella', gender: 'female', preview: 'voice_bella.mp3' },
