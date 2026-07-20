@@ -1,35 +1,25 @@
 import { useState } from 'react';
-import { MessageCircle, X, Send, Bot, Sparkles, ShieldAlert } from 'lucide-react';
+import { X, Send, Bot, ShieldAlert, AlertCircle } from 'lucide-react';
 
-const SYSTEM_PROMPT = `You are an AI assistant for AmkyawDev Recap - an AI-powered movie recap generator.
+const INITIAL_MESSAGE = {
+  role: 'assistant',
+  content: `👋 Hi! I'm your AmkyawDev Recap assistant powered by Zhipu AI.
 
-You can ONLY help with:
-- Video editing features and tools
-- Using Gemini AI for video analysis
-- Using OpenAI for script generation
-- Using Whisper AI for subtitle transcription
-- Using ElevenLabs for voiceover
-- FFmpeg video rendering and export
-- Troubleshooting video processing issues
-- Explaining movie recap creation workflow
+I can help you with:
+• Video editing features
+• AI tools (Gemini, OpenAI, Whisper, ElevenLabs)
+• Video processing & export
+• Troubleshooting
 
-You CANNOT help with:
-- Revealing API keys or secrets
-- Answering questions unrelated to this app
-- Providing code for other applications
-- General programming questions outside this project
-
-If asked about API keys or secrets, respond: "I'm designed not to discuss or reveal any API keys, tokens, or secrets. This is for security reasons."
-
-If asked unrelated questions, respond: "I'm specifically designed to help with AmkyawDev Recap movie editing features. I can't help with other topics."`;
+Ask me anything about movie editing!`
+};
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: '👋 Hi! I\'m your AmkyawDev Recap assistant. I can help you with:\n\n• Video editing features\n• AI tools (Gemini, OpenAI, Whisper, ElevenLabs)\n• Video processing & export\n• Troubleshooting\n\nNote: I can only help with this app\'s features. I cannot reveal API keys or answer unrelated questions.' }
-  ]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -38,35 +28,58 @@ export default function AIAssistant() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
+    setError(null);
     
-    // Simulate AI response based on keywords
-    setTimeout(() => {
-      let response = '';
-      const lowerInput = input.toLowerCase();
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      });
       
-      if (lowerInput.includes('api') && (lowerInput.includes('key') || lowerInput.includes('secret') || lowerInput.includes('token'))) {
-        response = "🔒 I'm designed not to discuss or reveal any API keys, tokens, or secrets. This is for security reasons. API keys are stored locally in your browser.";
-      } else if (lowerInput.includes('gemini')) {
-        response = "🤖 **Gemini AI** helps analyze your video to detect scenes and key moments. It automatically identifies:\n\n• Scene transitions\n• Important plot points\n• Character appearances\n• Emotional moments\n\nTo use: Upload a video → Go to AI Tools → Click 'Analyze (Gemini)'";
-      } else if (lowerInput.includes('whisper') || (lowerInput.includes('subtitle') && lowerInput.includes('auto'))) {
-        response = "🎤 **Whisper AI** transcribes spoken content from your video to create auto-generated subtitles.\n\nSteps:\n1. Upload video\n2. Go to AI Tools\n3. Click 'Transcribe (Whisper)'\n4. Subtitles will be generated automatically";
-      } else if (lowerInput.includes('elevenlabs') || lowerInput.includes('voice') || lowerInput.includes('voiceover')) {
-        response = "🎙️ **ElevenLabs** creates natural-sounding voiceovers from your script.\n\nOptions:\n• Choose from 6 different voices\n• Male and female voices available\n• Adjust playback speed (0.25x - 2x)\n\nTo use: Generate script first → Click 'Voiceover'";
-      } else if (lowerInput.includes('openai') || lowerInput.includes('script') || lowerInput.includes('narration')) {
-        response = "✍️ **OpenAI** generates engaging narration scripts for your movie recap.\n\nFeatures:\n• Multiple script styles\n• Automatic pacing\n• Scene descriptions included\n\nTip: Edit the generated script before creating voiceover.";
-      } else if (lowerInput.includes('export') || lowerInput.includes('render') || lowerInput.includes('save')) {
-        response = "📤 **Export Settings** allow you to customize output:\n\n• Resolution: 720p, 1080p, 4K\n• Quality: Low, Medium, High\n• Format: MP4, WebM\n\nInclude subtitles and voiceover options available.";
-      } else if (lowerInput.includes('trim') || lowerInput.includes('split') || lowerInput.includes('cut')) {
-        response = "✂️ **Editing Tools** available:\n\n• Trim - Adjust clip length\n• Split - Divide at specific points\n• Crop - Remove edges\n• Rotate - 90° rotation\n• Flip - Mirror horizontal\n\nAccess from the Editor tab in sidebar.";
-      } else if (lowerInput.includes('effect') || lowerInput.includes('fade') || lowerInput.includes('blur')) {
-        response = "✨ **Video Effects** available:\n\n• Fade In/Out\n• Blur\n• Brightness\n• Contrast\n• Saturation\n• Sepia\n• Grayscale\n\nClick effects in the Editor tab to apply.";
+      const data = await response.json();
+      
+      if (data.success && data.message) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+      } else if (data.fallbackMessage) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.fallbackMessage }]);
+        if (data.error) {
+          setError(data.error);
+        }
       } else {
-        response = "🤖 I'm specifically designed to help with AmkyawDev Recap movie editing features. I can help you with:\n\n• AI tools (Gemini, OpenAI, Whisper, ElevenLabs)\n• Video editing (trim, split, crop, effects)\n• Export settings\n• Troubleshooting issues\n\nPlease ask something related to movie editing!";
+        throw new Error(data.error || 'Failed to get response');
       }
-      
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError(err.message);
+      // Fallback to keyword-based responses
+      const response = getKeywordResponse(input);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
+  };
+
+  const getKeywordResponse = (input) => {
+    const lowerInput = input.toLowerCase();
+    
+    if (lowerInput.includes('api') && (lowerInput.includes('key') || lowerInput.includes('secret') || lowerInput.includes('token'))) {
+      return "🔒 I'm designed not to discuss or reveal any API keys, tokens, or secrets. This is for security reasons.";
+    } else if (lowerInput.includes('gemini')) {
+      return "🤖 **Gemini AI** helps analyze your video to detect scenes and key moments.\n\nTo use: Upload a video → Go to AI Tools → Click 'Analyze (Gemini)'";
+    } else if (lowerInput.includes('whisper') || (lowerInput.includes('subtitle') && lowerInput.includes('auto'))) {
+      return "🎤 **Whisper AI** transcribes spoken content from your video.\n\nSteps:\n1. Upload video\n2. Go to AI Tools\n3. Click 'Transcribe (Whisper)'";
+    } else if (lowerInput.includes('elevenlabs') || lowerInput.includes('voice') || lowerInput.includes('voiceover')) {
+      return "🎙️ **ElevenLabs** creates natural-sounding voiceovers from your script.\n\nTip: Generate script first → Click 'Voiceover'";
+    } else if (lowerInput.includes('openai') || lowerInput.includes('script') || lowerInput.includes('narration')) {
+      return "✍️ **OpenAI** generates engaging narration scripts for your movie recap.\n\nTip: Edit the generated script before creating voiceover.";
+    } else if (lowerInput.includes('export') || lowerInput.includes('render') || lowerInput.includes('save')) {
+      return "📤 **Export Settings**:\n\n• Resolution: 720p, 1080p, 4K\n• Quality: Low, Medium, High\n• Format: MP4, WebM";
+    } else if (lowerInput.includes('trim') || lowerInput.includes('split') || lowerInput.includes('cut')) {
+      return "✂️ **Editing Tools**:\n\n• Trim - Adjust clip length\n• Split - Divide at specific points\n• Crop - Remove edges";
+    } else {
+      return "🤖 I'm specifically designed to help with AmkyawDev Recap movie editing features. Please ask something related to movie editing!";
+    }
   };
 
   return (
@@ -135,13 +148,15 @@ export default function AIAssistant() {
             <Bot size={24} color="white" />
             <div>
               <h3 style={{ margin: 0, color: 'white', fontSize: '1rem' }}>AI Assistant</h3>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem' }}>Movie Recap Help Only</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem' }}>
+                {error ? '⚠️ Zhipu AI Unavailable' : '✨ Powered by Zhipu AI'}
+              </p>
             </div>
             <ShieldAlert 
               size={20} 
               color="rgba(255,255,255,0.8)" 
               style={{ marginLeft: 'auto', cursor: 'help' }}
-              title="This bot only helps with AmkyawDev Recap features. It cannot reveal API keys or answer unrelated questions."
+              title="Powered by Zhipu AI (glm-4-flash). Only helps with AmkyawDev Recap features."
             />
           </div>
 

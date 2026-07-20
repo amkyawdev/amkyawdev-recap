@@ -64,13 +64,25 @@ For **full functionality**, you need to deploy the backend separately:
 
 ## Environment Variables
 
-For production, set these in Cloudflare Pages:
+For production, set these in Cloudflare Pages (Settings → Environment Variables):
 
+### Required for Backend Server (Railway/Render)
 | Variable | Description |
 |----------|-------------|
 | `GEMINI_API_KEY` | Google Gemini API |
 | `OPENAI_API_KEY` | OpenAI API |
 | `ELEVENLABS_API_KEY` | ElevenLabs API |
+
+### Required for AI Chat (Cloudflare Pages Function)
+| Variable | Description |
+|----------|-------------|
+| `ZHIPU_AI_API_KEY` | Zhipu AI API (for floating bot assistant) |
+
+**To set ZHIPU_AI_API_KEY:**
+1. Go to Cloudflare Dashboard → Pages → amkyawdev-recap
+2. Settings → Environment Variables
+3. Add Variable: `ZHIPU_AI_API_KEY`
+4. Value: Your Zhipu AI API key from https://open.bigmodel.cn/
 
 ## Static Frontend Only
 
