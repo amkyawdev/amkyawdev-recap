@@ -19,7 +19,7 @@ export default function handler(req, res) {
   // Voices endpoint
   if (path === '/api/voices' && method === 'GET') {
     const voices = [
-      { id: 'thita', name: 'သီဟ (Thita)', gender: 'female', language: 'burmese' },
+      { id: 'thita', name: 'သီဟ (Thita)', gender: 'male', language: 'burmese' },
       { id: 'nila', name: 'နီလာ (Nila)', gender: 'female', language: 'burmese' },
       { id: 'rachel', name: 'Rachel', gender: 'female' },
       { id: 'domi', name: 'Domi', gender: 'female' },

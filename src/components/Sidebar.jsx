@@ -422,7 +422,7 @@ export default function Sidebar() {
                     <div>
                       <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Voice</label>
                       <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)} style={{ width: '100%', padding: '8px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                        <option value="thita">သီဟ (Female - Burmese)</option>
+                        <option value="thita">သီဟ (Male - Burmese)</option>
                         <option value="nila">နီလာ (Female - Burmese)</option>
                         <option value="rachel">Rachel (Female)</option>
                         <option value="domi">Domi (Female)</option>
