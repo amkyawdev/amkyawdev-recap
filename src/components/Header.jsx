@@ -3,7 +3,7 @@ import { Film } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import Auth from './Auth';
 
-export default function Header() {
+export default function Header({ onExport }) {
   const { setActivePanel, videoFile, processingStatus } = useAppStore();
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
@@ -119,7 +119,8 @@ export default function Header() {
         
         <button 
           className="btn btn-primary"
-          disabled={!videoFile || processingStatus !== 'idle' || !user}
+          disabled={!videoFile || !user}
+          onClick={onExport}
           title="Export"
           style={{ padding: '8px 12px' }}
         >

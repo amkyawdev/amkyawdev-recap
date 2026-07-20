@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Film, Shield } from 'lucide-react';
+import { Film } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import VideoPreview from './components/VideoPreview';
@@ -10,6 +10,7 @@ import ProcessingModal from './components/ProcessingModal';
 import ToastContainer from './components/ToastContainer';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
+import ExportModal from './components/ExportModal';
 import Auth from './components/Auth';
 import './index.css';
 
@@ -19,9 +20,9 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('register');
   const [loading, setLoading] = useState(true);
+  const [showExport, setShowExport] = useState(false);
 
   useEffect(() => {
-    // Check for existing user
     const checkUser = () => {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -33,7 +34,6 @@ function App() {
         }
       }
       
-      // Listen for Firebase auth
       if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged((firebaseUser) => {
           if (firebaseUser) {
@@ -53,7 +53,6 @@ function App() {
           setLoading(false);
         });
       } else {
-        // Firebase not loaded, show auth
         setShowAuth(true);
         setLoading(false);
       }
@@ -95,7 +94,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header onExport={() => setShowExport(true)} />
       
       <div className="main-layout">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -115,6 +114,7 @@ function App() {
       <ProcessingModal />
       <ToastContainer />
       <AIAssistant />
+      <ExportModal isOpen={showExport} onClose={() => setShowExport(false)} />
     </div>
   );
 }

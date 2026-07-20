@@ -23,6 +23,7 @@ export default function VideoPreview() {
   const [isDragging, setIsDragging] = useState(false);
   const [showDurationWarning, setShowDurationWarning] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
@@ -73,6 +74,18 @@ export default function VideoPreview() {
     }
   };
 
+  const skipBackward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+    }
+  };
+
+  const skipForward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10);
+    }
+  };
+
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
@@ -96,8 +109,18 @@ export default function VideoPreview() {
 
   const toggleMute = () => {
     if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setVolume(videoRef.current.muted ? 0 : 1);
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+      setVolume(isMuted ? 1 : 0);
+    }
+  };
+
+  const handleVolumeChange = (e) => {
+    const newVolume = parseInt(e.target.value) / 100;
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      setVolume(newVolume);
+      setIsMuted(newVolume === 0);
     }
   };
 
@@ -208,7 +231,7 @@ export default function VideoPreview() {
           {currentSubtitle && (
             <div style={{
               position: 'absolute',
-              bottom: '80px',
+              bottom: '100px',
               left: '50%',
               transform: 'translateX(-50%)',
               background: 'rgba(0, 0, 0, 0.85)',
@@ -231,7 +254,7 @@ export default function VideoPreview() {
             left: 0,
             right: 0,
             background: 'linear-gradient(transparent, rgba(0,0,0,0.9))',
-            padding: '20px 16px 12px',
+            padding: '24px 16px 16px',
             transition: 'opacity 0.3s',
             opacity: showControls ? 1 : 0
           }}>
@@ -244,7 +267,7 @@ export default function VideoPreview() {
                 background: 'rgba(255,255,255,0.2)',
                 borderRadius: '3px',
                 cursor: 'pointer',
-                marginBottom: '12px'
+                marginBottom: '16px'
               }}
             >
               <div style={{
@@ -258,23 +281,51 @@ export default function VideoPreview() {
             
             {/* Controls Row */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button onClick={togglePlay} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px' }}>
-                  <i className={`bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}`} style={{ fontSize: '24px' }}></i>
+              {/* Left Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button onClick={togglePlay} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px' }}>
+                  <i className={`bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}`} style={{ fontSize: '28px' }}></i>
                 </button>
                 
-                <button onClick={toggleMute} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px' }}>
-                  <i className={`bi ${volume === 0 ? 'bi-volume-mute-fill' : 'bi-volume-up-fill'}`} style={{ fontSize: '20px' }}></i>
+                <button onClick={skipBackward} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px' }} title="Rewind 10s">
+                  <i className="bi bi-arrow-left-circle-fill" style={{ fontSize: '24px' }}></i>
                 </button>
                 
-                <span style={{ color: '#fff', fontSize: '0.85rem' }}>
+                <button onClick={skipForward} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px' }} title="Forward 10s">
+                  <i className="bi bi-arrow-right-circle-fill" style={{ fontSize: '24px' }}></i>
+                </button>
+                
+                {/* Volume */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button onClick={toggleMute} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px' }}>
+                    <i className={`bi ${isMuted || volume === 0 ? 'bi-volume-mute-fill' : 'bi-volume-up-fill'}`} style={{ fontSize: '20px' }}></i>
+                  </button>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={isMuted ? 0 : volume * 100}
+                    onChange={handleVolumeChange}
+                    style={{ 
+                      width: '80px', 
+                      height: '4px',
+                      accentColor: 'var(--accent-primary)',
+                      cursor: 'pointer'
+                    }} 
+                  />
+                </div>
+                
+                <span style={{ color: '#fff', fontSize: '0.85rem', marginLeft: '8px' }}>
                   {formatTime(currentTime)} / {formatTime(videoRef.current?.duration || 0)}
                 </span>
               </div>
               
-              <button onClick={toggleFullscreen} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px' }}>
-                <i className="bi bi-fullscreen" style={{ fontSize: '20px' }}></i>
-              </button>
+              {/* Right Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button onClick={toggleFullscreen} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px' }}>
+                  <i className="bi bi-fullscreen" style={{ fontSize: '22px' }}></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
