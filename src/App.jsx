@@ -9,6 +9,7 @@ import SubtitleEditor from './components/SubtitleEditor';
 import ProcessingModal from './components/ProcessingModal';
 import ToastContainer from './components/ToastContainer';
 import Footer from './components/Footer';
+import AIAssistant from './components/AIAssistant';
 import './index.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
       <Footer />
       <ProcessingModal />
       <ToastContainer />
+      <AIAssistant />
     </div>
   );
 }

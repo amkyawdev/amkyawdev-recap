@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Upload } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
+import DurationValidator from './DurationValidator';
 
 export default function VideoPreview() {
   const videoRef = useRef(null);
@@ -21,14 +22,28 @@ export default function VideoPreview() {
   } = useAppStore();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [showDurationWarning, setShowDurationWarning] = useState(false);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
     if (file && file.type.startsWith('video/')) {
-      const url = URL.createObjectURL(file);
-      setVideo(file, url, { duration: 0, width: 0, height: 0 });
-      addToast({ type: 'success', message: 'Video uploaded successfully!' });
-      setActivePanel('editor');
+      // Create temp video to check duration
+      const tempVideo = document.createElement('video');
+      tempVideo.src = URL.createObjectURL(file);
+      tempVideo.onloadedmetadata = () => {
+        const duration = tempVideo.duration;
+        URL.revokeObjectURL(tempVideo.src);
+        
+        // Check if video is > 5 minutes (300 seconds)
+        if (duration > 300) {
+          setShowDurationWarning(true);
+          setVideo(file, URL.createObjectURL(file), { duration, width: tempVideo.videoWidth, height: tempVideo.videoHeight });
+        } else {
+          setVideo(file, URL.createObjectURL(file), { duration, width: tempVideo.videoWidth, height: tempVideo.videoHeight });
+          addToast({ type: 'success', message: 'Video uploaded successfully!' });
+          setActivePanel('editor');
+        }
+      };
     } else {
       addToast({ type: 'error', message: 'Please select a valid video file' });
     }
@@ -199,6 +214,12 @@ export default function VideoPreview() {
           </div>
         </div>
       )}
+      
+      <DurationValidator 
+        isOpen={showDurationWarning}
+        onClose={() => setShowDurationWarning(false)}
+        duration={videoMeta.duration}
+      />
     </div>
   );
 }
