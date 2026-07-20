@@ -7,6 +7,28 @@
     <meta name="description" content="AmkyawDev Recap - AI-powered movie recap generator with video editing, subtitles, and voiceover" />
     <meta name="theme-color" content="#0a0a0f" />
     <title>AmkyawDev Recap - AI Movie Recap Generator</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+      // Firebase Config from Environment Variables
+      const firebaseConfig = {
+        apiKey: "AIzaSyCcw0_7Pc4tIAapg-Hyvk4UtiQfo1USjU8",
+        authDomain: "amk-apk.firebaseapp.com",
+        databaseURL: "https://amk-apk-default-rtdb.firebaseio.com",
+        projectId: "amk-apk",
+        storageBucket: "amk-apk.firebasestorage.app",
+        messagingSenderId: "267632318274",
+        appId: "1:267632318274:android:441e4b8cb66da60d04dadb",
+        measurementId: "G-E2658JJ29R"
+      };
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
   </head>
   <body>
     <div id="root"></div>
