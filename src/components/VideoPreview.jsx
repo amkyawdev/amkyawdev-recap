@@ -231,17 +231,24 @@ export default function VideoPreview() {
           {currentSubtitle && (
             <div style={{
               position: 'absolute',
-              bottom: '100px',
+              ...(currentSubtitle.style?.position === 'top' 
+                ? { top: '20px' }
+                : currentSubtitle.style?.position === 'center'
+                ? { top: '50%', transform: 'translate(-50%, -50%)' }
+                : { bottom: currentSubtitle.style?.marginBottom || '80px' }),
               left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0, 0, 0, 0.85)',
-              padding: '10px 20px',
+              transform: currentSubtitle.style?.position === 'center' ? 'translate(-50%, -50%)' : 'translateX(-50%)',
+              background: currentSubtitle.style?.backgroundColor || 'rgba(0, 0, 0, 0.85)',
+              padding: currentSubtitle.style?.padding || '10px 20px',
               borderRadius: '6px',
-              fontSize: '1.1rem',
+              fontSize: `${currentSubtitle.style?.fontSize ? currentSubtitle.style.fontSize * 0.6 : 20}px`,
               maxWidth: '85%',
-              textAlign: 'center',
-              color: '#fff',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+              textAlign: currentSubtitle.style?.textAlign || 'center',
+              color: currentSubtitle.style?.fontColor || '#fff',
+              fontFamily: currentSubtitle.style?.fontFamily || 'Arial',
+              fontWeight: currentSubtitle.style?.bold ? 'bold' : 'normal',
+              textShadow: currentSubtitle.style?.shadow ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
+              whiteSpace: 'pre-wrap'
             }}>
               {currentSubtitle.text}
             </div>

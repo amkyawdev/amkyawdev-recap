@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useAppStore from '../store/useAppStore';
+import SubtitleSettings from './SubtitleSettings';
 
 export default function Sidebar() {
   const { 
@@ -452,6 +453,9 @@ export default function Sidebar() {
                     <span style={{ fontSize: '0.75rem' }}>{subtitles.length} subtitles loaded</span>
                   </div>
                 )}
+                
+                {/* Subtitle Settings */}
+                <SubtitleSettings />
               </div>
 
               {/* Effects */}
