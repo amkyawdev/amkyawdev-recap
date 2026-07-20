@@ -430,7 +430,7 @@ export default function Auth({ onClose, mode = 'login', onModeChange }) {
         }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
-            onClick={() => setIsLogin(!isLogin); onModeChange?.(isLogin ? 'register' : 'login')}
+            onClick={() => { setIsLogin(!isLogin); onModeChange?.(isLogin ? 'register' : 'login'); }}
             style={{
               background: 'none',
               border: 'none',
