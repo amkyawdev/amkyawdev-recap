@@ -98,12 +98,8 @@ export default function Auth({ onClose, mode = 'login', onModeChange }) {
   };
 
   const handleGuestAccess = () => {
-    localStorage.setItem('user', JSON.stringify({ 
-      isLoggedIn: true,
-      isGuest: true 
-    }));
-    addToast({ type: 'info', message: 'Continuing as guest' });
-    onClose?.();
+    // Guest access disabled - registration required
+    setError('Registration is required to use this app');
   };
 
   if (isReset) {
@@ -398,28 +394,6 @@ export default function Auth({ onClose, mode = 'login', onModeChange }) {
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          margin: '24px 0',
-          color: 'var(--text-secondary)',
-          fontSize: '0.85rem'
-        }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-          <span style={{ padding: '0 16px' }}>or</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-        </div>
-
-        {/* Guest Access */}
-        <button
-          onClick={handleGuestAccess}
-          className="btn btn-secondary"
-          style={{ width: '100%', justifyContent: 'center' }}
-        >
-          Continue as Guest
-        </button>
 
         {/* Toggle */}
         <p style={{ 
