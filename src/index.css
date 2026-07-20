@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-deep: #1a1a2e;
-  --bg-surface: #16213e;
-  --bg-elevated: #1f3460;
-  --bg-hover: #22222e;
-  --border: #2a2a3a;
-  --border-light: #3a3a4a;
-  --text-primary: #f0f0f5;
-  --text-secondary: #b0b0c0;
-  --text-muted: #808090;
+  --bg-deep: #87CEEB;
+  --bg-surface: #B0E0E6;
+  --bg-elevated: #E0F7FA;
+  --bg-hover: #B0E0E6;
+  --border: #87CEEB;
+  --border-light: #B0E0E6;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #6a6a8a;
   --accent-primary: #ff3366;
   --accent-secondary: #00d4ff;
   --accent-tertiary: #ffd700;
