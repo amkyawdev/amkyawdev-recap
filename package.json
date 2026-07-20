@@ -8,8 +8,9 @@
     "server": "node server/index.js",
     "dev:full": "npm run server & npm run dev",
     "build": "vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy:prod": "npm run build && wrangler pages deploy dist --project-name=amkyawdev-recap"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

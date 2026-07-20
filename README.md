@@ -2,6 +2,8 @@
 
 A browser-based video editing tool that transforms movies into compelling recap videos with AI-generated narration, subtitles, and voiceovers.
 
+[![Deploy with Cloudflare](https://deploy.pages.cloudflare.com/button.svg)](https://dash.cloudflare.com/?to=/:workers/pages/new)
+
 ![Interface Preview](public/images/demo1.svg)
 
 ## ✨ Features
