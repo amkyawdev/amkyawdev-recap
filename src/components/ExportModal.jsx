@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import useAppStore from '../store/useAppStore';
+import { processVideo } from '../utils/videoProcessor';
 
 export default function ExportModal({ isOpen, onClose }) {
-  const { videoFile, subtitles, voiceover, addToast } = useAppStore();
+  const { videoFile, subtitles, addToast } = useAppStore();
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('idle');
   const [downloadUrl, setDownloadUrl] = useState(null);
-  const [stages, setStages] = useState([
-    { id: 'init', name: 'Initializing export...', done: false },
-    { id: 'video', name: 'Processing video...', done: false },
-    { id: 'subtitles', name: 'Adding subtitles...', done: false },
-    { id: 'voiceover', name: 'Adding voiceover...', done: false },
-    { id: 'encoding', name: 'Encoding video...', done: false },
-    { id: 'complete', name: 'Export complete!', done: false },
+  const [currentStage, setCurrentStage] = useState('');
+  const [stages] = useState([
+    { id: 'load', name: 'Loading FFmpeg...', icon: 'bi-hourglass-split' },
+    { id: 'init', name: 'Initializing...', icon: 'bi-gear' },
+    { id: 'video', name: 'Processing video...', icon: 'bi-film' },
+    { id: 'subtitles', name: 'Adding subtitles...', icon: 'bi-text-left' },
+    { id: 'encoding', name: 'Encoding...', icon: 'bi bi-filetype-mp4' },
+    { id: 'complete', name: 'Complete!', icon: 'bi-check-lg' },
   ]);
 
   useEffect(() => {
@@ -25,30 +27,37 @@ export default function ExportModal({ isOpen, onClose }) {
     setProgress(0);
     setStatus('processing');
     setDownloadUrl(null);
+    setCurrentStage('load');
 
-    const steps = [
-      { id: 'init', progress: 10, delay: 800 },
-      { id: 'video', progress: 30, delay: 1200 },
-      { id: 'subtitles', progress: 50, delay: 1000 },
-      { id: 'voiceover', progress: 70, delay: 1000 },
-      { id: 'encoding', progress: 90, delay: 1500 },
-      { id: 'complete', progress: 100, delay: 500 },
-    ];
+    try {
+      const result = await processVideo({
+        videoFile,
+        subtitles,
+        settings: {
+          resolution: '1080p',
+          quality: 'medium',
+          includeSubtitles: true,
+          includeVoiceover: false
+        }
+      }, ({ stage, progress: p, message }) => {
+        setCurrentStage(stage);
+        if (stage === 'complete') {
+          setProgress(100);
+        } else if (stage === 'loading') {
+          setProgress(p);
+        } else {
+          setProgress(Math.min(95, p));
+        }
+      });
 
-    for (const step of steps) {
-      await new Promise(r => setTimeout(r, step.delay));
-      setProgress(step.progress);
-      setStages(prev => prev.map(s => 
-        s.id === step.id ? { ...s, done: true } : s
-      ));
-    }
-
-    setStatus('complete');
-    
-    // Create a blob URL for the original video (for demo)
-    if (videoFile) {
-      const url = URL.createObjectURL(videoFile);
+      setStatus('complete');
+      const url = URL.createObjectURL(result);
       setDownloadUrl(url);
+      addToast({ type: 'success', message: 'Video processed successfully!' });
+    } catch (error) {
+      console.error('Export error:', error);
+      setStatus('error');
+      addToast({ type: 'error', message: 'Export failed: ' + error.message });
     }
   };
 
@@ -71,11 +80,13 @@ export default function ExportModal({ isOpen, onClose }) {
     setProgress(0);
     setStatus('idle');
     setDownloadUrl(null);
-    setStages(stages.map(s => ({ ...s, done: false })));
+    setCurrentStage('');
     onClose();
   };
 
   if (!isOpen) return null;
+
+  const currentIndex = stages.findIndex(s => s.id === currentStage);
 
   return (
     <div style={{
@@ -84,112 +95,138 @@ export default function ExportModal({ isOpen, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
+      background: 'rgba(0,0,0,0.85)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 2000,
-      backdropFilter: 'blur(8px)'
+      backdropFilter: 'blur(10px)'
     }}>
       <div style={{
         background: 'var(--bg-surface)',
-        borderRadius: '16px',
-        padding: '32px',
+        borderRadius: '20px',
+        padding: '40px',
         width: '90%',
-        maxWidth: '480px',
+        maxWidth: '500px',
         border: '1px solid var(--border)',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
-            width: '64px',
-            height: '64px',
-            margin: '0 auto 16px',
+            width: '80px',
+            height: '80px',
+            margin: '0 auto 20px',
             background: status === 'complete' 
               ? 'linear-gradient(135deg, #00ff88, #00d4ff)' 
+              : status === 'error'
+              ? 'linear-gradient(135deg, #ff3366, #ff6b6b)'
               : 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            animation: status === 'processing' ? 'pulse 2s infinite' : 'none'
           }}>
             {status === 'complete' ? (
-              <i className="bi bi-check-lg" style={{ fontSize: '32px', color: '#fff' }}></i>
+              <i className="bi bi-check-lg" style={{ fontSize: '40px', color: '#fff' }}></i>
+            ) : status === 'error' ? (
+              <i className="bi bi-x-lg" style={{ fontSize: '40px', color: '#fff' }}></i>
             ) : (
-              <i className="bi bi-hourglass-split" style={{ fontSize: '28px', color: '#fff', animation: 'spin 1s linear infinite' }}></i>
+              <i className="bi bi-gear-wide-connected" style={{ fontSize: '36px', color: '#fff' }}></i>
             )}
           </div>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>
-            {status === 'complete' ? 'Export Complete!' : 'Processing Video...'}
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>
+            {status === 'complete' ? 'Export Complete!' : status === 'error' ? 'Export Failed' : 'Processing Video...'}
           </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
             {status === 'complete' 
               ? 'Your video is ready to download' 
+              : status === 'error'
+              ? 'An error occurred during processing'
               : 'Please wait while we process your video'}
           </p>
         </div>
 
-        {/* Progress Bar */}
-        <div style={{ marginBottom: '24px' }}>
+        {/* Progress */}
+        <div style={{ marginBottom: '32px' }}>
           <div style={{
-            height: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '8px',
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)'
+          }}>
+            <span>{stages.find(s => s.id === currentStage)?.name || 'Initializing...'}</span>
+            <span>{progress}%</span>
+          </div>
+          <div style={{
+            height: '10px',
             background: 'var(--bg-elevated)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            marginBottom: '8px'
+            borderRadius: '5px',
+            overflow: 'hidden'
           }}>
             <div style={{
               height: '100%',
               width: `${progress}%`,
               background: status === 'complete' 
                 ? 'linear-gradient(90deg, #00ff88, #00d4ff)' 
+                : status === 'error'
+                ? 'linear-gradient(90deg, #ff3366, #ff6b6b)'
                 : 'var(--accent-primary)',
-              borderRadius: '4px',
-              transition: 'width 0.5s ease'
+              borderRadius: '5px',
+              transition: 'width 0.3s ease'
             }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            <span>{progress}%</span>
-            <span>{progress < 100 ? 'Processing...' : 'Done!'}</span>
           </div>
         </div>
 
         {/* Stages */}
-        <div style={{ marginBottom: '24px' }}>
-          {stages.map((stage, i) => (
-            <div key={stage.id} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '8px 0',
-              opacity: stage.done || progress > (i * 15 + 5) ? 1 : 0.4,
-              transition: 'opacity 0.3s'
-            }}>
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                background: stage.done ? '#00ff88' : 'var(--bg-elevated)',
+        <div style={{ marginBottom: '32px' }}>
+          {stages.map((stage, i) => {
+            const isDone = i < currentIndex || (currentIndex === -1 && i === 0);
+            const isActive = stages[currentIndex]?.id === stage.id || (currentIndex === -1 && i === 0 && status === 'processing');
+            const isPending = i > currentIndex && !(currentIndex === -1 && i === 0);
+            
+            return (
+              <div key={stage.id} style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
+                gap: '14px',
+                padding: '10px 0',
+                opacity: isPending ? 0.35 : 1,
+                transition: 'opacity 0.3s'
               }}>
-                {stage.done ? (
-                  <i className="bi bi-check" style={{ fontSize: '14px', color: '#000' }}></i>
-                ) : (
-                  <i className="bi bi-circle" style={{ fontSize: '8px', color: 'var(--text-secondary)' }}></i>
-                )}
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: isDone 
+                    ? '#00ff88' 
+                    : isActive 
+                    ? 'var(--accent-primary)'
+                    : 'var(--bg-elevated)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background 0.3s'
+                }}>
+                  {isDone ? (
+                    <i className="bi bi-check" style={{ fontSize: '14px', color: '#000' }}></i>
+                  ) : (
+                    <i className={isActive ? 'bi bi-arrow-right' : 'bi bi-circle'} style={{ fontSize: isActive ? '12px' : '6px', color: isActive ? '#fff' : 'var(--text-secondary)' }}></i>
+                  )}
+                </div>
+                <span style={{ 
+                  fontSize: '0.95rem',
+                  fontWeight: isActive ? '600' : '400',
+                  color: isDone || isActive ? 'var(--text-primary)' : 'var(--text-secondary)'
+                }}>
+                  {stage.name}
+                </span>
               </div>
-              <span style={{ 
-                fontSize: '0.9rem',
-                color: stage.done ? 'var(--text-primary)' : 'var(--text-secondary)'
-              }}>
-                {stage.name}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Actions */}
@@ -198,16 +235,16 @@ export default function ExportModal({ isOpen, onClose }) {
             onClick={handleClose}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '14px',
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
-              borderRadius: '8px',
+              borderRadius: '10px',
               color: 'var(--text-primary)',
               cursor: 'pointer',
-              fontSize: '0.9rem'
+              fontSize: '1rem'
             }}
           >
-            Cancel
+            {status === 'complete' ? 'Close' : 'Cancel'}
           </button>
           
           {status === 'complete' && (
@@ -215,31 +252,31 @@ export default function ExportModal({ isOpen, onClose }) {
               onClick={handleDownload}
               style={{
                 flex: 1,
-                padding: '12px',
+                padding: '14px',
                 background: 'linear-gradient(135deg, #00ff88, #00d4ff)',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 color: '#000',
                 cursor: 'pointer',
-                fontSize: '0.9rem',
+                fontSize: '1rem',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '10px'
               }}
             >
-              <i className="bi bi-download"></i>
-              Download Video
+              <i className="bi bi-download" style={{ fontSize: '18px' }}></i>
+              Download MP4
             </button>
           )}
         </div>
       </div>
 
       <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
         }
       `}</style>
     </div>
