@@ -66,12 +66,15 @@ For **full functionality**, you need to deploy the backend separately:
 
 For production, set these in Cloudflare Pages (Settings → Environment Variables):
 
-### Required for Backend Server (Railway/Render)
+### Required for Backend Server (Vercel)
 | Variable | Description |
 |----------|-------------|
 | `GEMINI_API_KEY` | Google Gemini API |
 | `OPENAI_API_KEY` | OpenAI API |
 | `ELEVENLABS_API_KEY` | ElevenLabs API |
+
+**Backend URL:** `https://amkyawdev-recap.vercel.app/api`
+(The frontend automatically uses this URL for API calls)
 
 ### Required for AI Chat (Cloudflare Pages Function)
 | Variable | Description |
@@ -83,6 +86,11 @@ For production, set these in Cloudflare Pages (Settings → Environment Variable
 2. Settings → Environment Variables
 3. Add Variable: `ZHIPU_AI_API_KEY`
 4. Value: Your Zhipu AI API key from https://open.bigmodel.cn/
+
+### Frontend Environment Variable
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API URL (optional, defaults to Vercel) |
 
 ## Static Frontend Only
 

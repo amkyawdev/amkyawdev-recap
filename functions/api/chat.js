@@ -2,10 +2,17 @@
  * Cloudflare Pages Function: Zhipu AI Chat API
  * Endpoint: /api/chat
  * 
- * Requires ZHIPU_AI_API_KEY secret in Cloudflare Pages settings
+ * Requires:
+ * - ZHIPU_AI_API_KEY secret in Cloudflare Pages settings
+ * - VERCEL_API_URL secret for backend API
  */
 
 const ZHIPU_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+
+// Get backend URL from environment variable
+const getBackendUrl = () => {
+  return 'https://amkyawdev-recap.vercel.app';
+};
 
 const SYSTEM_PROMPT = `You are an AI assistant for AmkyawDev Recap - an AI-powered movie recap generator.
 
