@@ -34,56 +34,38 @@ export default function Header() {
         <span className="logo-text">AMKYAWDEV RECAP</span>
       </div>
 
-      <div className="header-actions">
+      <div className="header-actions" style={{ flexWrap: 'wrap', gap: '8px' }}>
         {user && !user.isGuest && (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px',
-            marginRight: '12px',
-            padding: '8px 12px',
+            padding: '6px 10px',
             background: 'var(--bg-elevated)',
             borderRadius: 'var(--radius-md)',
-            fontSize: '0.85rem'
+            fontSize: '0.8rem'
           }}>
-            <User size={16} />
-            <span>{user.name || user.email?.split('@')[0]}</span>
+            <User size={14} />
+            <span style={{ display: 'none' }}>{user.name || user.email?.split('@')[0]}</span>
           </div>
         )}
         
         <button 
           className="btn btn-secondary"
           onClick={() => setActivePanel('settings')}
+          style={{ padding: '8px 12px', fontSize: '0.85rem' }}
         >
-          <Settings size={18} />
-          API Settings
+          <Settings size={16} />
+          <span style={{ display: 'inline' }}>Settings</span>
         </button>
-        
-        {user ? (
-          <button 
-            className="btn btn-secondary"
-            onClick={handleLogout}
-            style={{ color: 'var(--error)' }}
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        ) : (
-          <button 
-            className="btn btn-secondary"
-            onClick={() => setShowAuth(true)}
-          >
-            <Shield size={18} />
-            Login
-          </button>
-        )}
         
         <button 
           className="btn btn-primary"
           disabled={!videoFile || processingStatus !== 'idle'}
+          style={{ padding: '8px 16px', fontSize: '0.85rem' }}
         >
-          <Download size={18} />
-          Export
+          <Download size={16} />
+          <span>Export</span>
         </button>
       </div>
 
