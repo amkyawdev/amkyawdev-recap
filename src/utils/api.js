@@ -1,5 +1,5 @@
-// Use Vercel backend URL (set via environment or fallback to localhost)
-const API_BASE = import.meta.env.VITE_API_URL || 'https://amkyawdev-recap.vercel.app/api';
+// Vercel backend URL
+const API_BASE = 'https://amkyawdev-recap.vercel.app/api';
 
 export const api = {
   async uploadVideo(file) {

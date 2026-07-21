@@ -121,8 +121,8 @@ export const processVideo = async (options, onProgress) => {
     
     if (onProgress) onProgress({ stage: 'processing', progress: 20, message: 'Sending to server...' });
 
-    // Call local server API with FFmpeg
-    const response = await fetch('http://8mb.local:3001/api/process-video', {
+    // Call Vercel backend API with FFmpeg
+    const response = await fetch('https://amkyawdev-recap.vercel.app/api/process-video', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -168,7 +168,7 @@ export const processVideo = async (options, onProgress) => {
 async function pollForResult(jobId, onProgress) {
   const maxAttempts = 60;
   let attempts = 0;
-  const serverUrl = 'http://8mb.local:3001';
+  const serverUrl = 'https://amkyawdev-recap.vercel.app';
   
   while (attempts < maxAttempts) {
     try {
