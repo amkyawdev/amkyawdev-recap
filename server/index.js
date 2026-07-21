@@ -318,11 +318,12 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
     // Build FFmpeg args
     const args = ['-i', inputPath];
 
-    // Add subtitles
+    // Add subtitles at bottom
     if (settings?.includeSubtitles && subtitles?.length > 0) {
       const assContent = createASSContent(subtitles);
       fs.writeFileSync(subtitlePath, assContent);
-      args.push('-vf', `ass=${subtitlePath}`);
+      // Force subtitles to bottom (Alignment=2) with bottom margin
+      args.push('-vf', `ass=${subtitlePath}:force_style='Alignment=2,MarginV=30'`);
     }
 
     // Resolution
@@ -381,6 +382,7 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
 }
 
 function createASSContent(subtitles) {
+  // Style: Alignment=2 means bottom center, MarginV=30 pushes it up from bottom
   let content = `[Script Info]
 Title: Subtitles
 ScriptType: v4.00+
@@ -397,7 +399,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     const start = formatTime(sub.startTime);
     const end = formatTime(sub.endTime);
     const text = (sub.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '\\N');
-    content += `Dialogue: 0,${start},${end},Default,,0,0,0,,${text}\n`;
+    // MarginV=30 pushes subtitle up from bottom
+    content += `Dialogue: 0,${start},${end},Default,,0,0,30,,${text}\n`;
   });
 
   return content;
