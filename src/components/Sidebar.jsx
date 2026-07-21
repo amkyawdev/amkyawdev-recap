@@ -97,58 +97,42 @@ export default function Sidebar() {
     }
   };
 
-  // Transcribe with Whisper AI
+  // Generate subtitles from script
   const handleWhisperTranscribe = async () => {
-    if (!apiKeys.whisper && !apiKeys.openai) {
-      addToast({ type: 'error', message: 'Please enter OpenAI/Whisper API Key first' });
+    if (!apiKeys.openai) {
+      addToast({ type: 'error', message: 'Please enter OpenAI API Key first' });
       return;
     }
-    if (!videoFile) {
-      addToast({ type: 'error', message: 'Please upload a video first' });
+    if (!script) {
+      addToast({ type: 'error', message: 'Please generate script first' });
       return;
     }
     
     setProcessingStatus('analyzing');
     setProcessingProgress(0);
-    setProcessingStage('Transcribing audio with Whisper AI...');
-    addToast({ type: 'info', message: 'Using Whisper AI to transcribe video audio...' });
+    setProcessingStage('Generating subtitles...');
+    addToast({ type: 'info', message: 'Generating subtitles from script...' });
     
     try {
-      // For real transcription, you would send audio to Whisper API
-      // For now, generate subtitles from existing script or demo
       const duration = videoMeta?.duration || 60;
       
-      if (script) {
-        // Generate subtitles from script
-        const subs = await generateSubtitles(
-          script,
-          duration,
-          apiKeys.openai || apiKeys.whisper,
-          ({ progress, message }) => {
-            setProcessingProgress(progress);
-            setProcessingStage(message);
-          }
-        );
-        setSubtitles(subs);
-      } else {
-        // Demo subtitles when no script
-        const demoSubs = [
-          { startTime: 0, endTime: 3.5, text: "Welcome to this movie recap." },
-          { startTime: 3.5, endTime: 7.2, text: "Today we're diving into an epic story." },
-          { startTime: 7.2, endTime: 11.0, text: "The film opens with a breathtaking shot." },
-          { startTime: 11.0, endTime: 15.5, text: "We're drawn into a world of adventure." },
-          { startTime: 15.5, endTime: 20.0, text: "Our protagonist faces challenges." },
-          { startTime: 20.0, endTime: 25.0, text: "The tension builds with each passing moment." },
-          { startTime: 25.0, endTime: 30.0, text: "Leading us toward an unforgettable climax." }
-        ];
-        setSubtitles(demoSubs);
-      }
+      // Generate subtitles from script
+      const subs = await generateSubtitles(
+        script,
+        duration,
+        apiKeys.openai,
+        ({ progress, message }) => {
+          setProcessingProgress(progress);
+          setProcessingStage(message);
+        }
+      );
+      setSubtitles(subs);
       
       setProcessingStatus('idle');
-      addToast({ type: 'success', message: 'Whisper transcription complete!' });
+      addToast({ type: 'success', message: 'Subtitles generated! ' + subs.length + ' items' });
     } catch (error) {
       setProcessingStatus('idle');
-      addToast({ type: 'error', message: 'Transcription failed: ' + error.message });
+      addToast({ type: 'error', message: 'Subtitle generation failed: ' + error.message });
     }
   };
 
@@ -158,7 +142,7 @@ export default function Sidebar() {
       addToast({ type: 'error', message: 'Please enter OpenAI API Key first' });
       return;
     }
-    if (!videoFile && !currentProject?.analysis) {
+    if (!currentProject?.analysis) {
       addToast({ type: 'error', message: 'Please analyze video first' });
       return;
     }
@@ -168,20 +152,8 @@ export default function Sidebar() {
     addToast({ type: 'info', message: 'Generating script with OpenAI...' });
     
     try {
-      const analysis = currentProject?.analysis || {
-        scenes: [
-          { start: 0, end: 30, description: 'Opening scene', importance: 'high' },
-          { start: 30, end: 60, description: 'Introduction', importance: 'medium' },
-          { start: 60, end: 120, description: 'Main content', importance: 'high' },
-          { start: 120, end: 180, description: 'Climax', importance: 'high' },
-          { start: 180, end: 210, description: 'Resolution', importance: 'medium' }
-        ],
-        keyMoments: ['Opening scene', 'Key moments', 'Climax', 'Resolution'],
-        recommendedLength: 60
-      };
-      
       const result = await generateScript(
-        analysis,
+        currentProject.analysis,
         apiKeys.openai,
         'dramatic',
         ({ progress, message }) => {
