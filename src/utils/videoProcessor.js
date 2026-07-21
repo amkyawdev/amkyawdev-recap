@@ -1,37 +1,82 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+/**
+ * Lightweight Video Processor
+ * Uses Web Worker for FFmpeg processing to avoid blocking the main thread
+ */
 
-let ffmpeg = null;
+import { fetchFile } from '@ffmpeg/util';
+
+// Singleton worker instance
+let ffmpegWorker = null;
 let isLoading = false;
+let messageId = 0;
+const pendingCallbacks = new Map();
 
-export const loadFFmpeg = async (onProgress) => {
-  if (ffmpeg) return ffmpeg;
-  if (isLoading) return null;
+// Initialize the FFmpeg worker
+const initWorker = () => {
+  if (ffmpegWorker) return ffmpegWorker;
   
-  isLoading = true;
-  ffmpeg = new FFmpeg();
-  
-  ffmpeg.on('progress', ({ progress }) => {
-    if (onProgress) {
-      onProgress(Math.round(progress * 100));
+  ffmpegWorker = new Worker(
+    new URL('../workers/ffmpeg.worker.js', import.meta.url),
+    { type: 'module' }
+  );
+
+  ffmpegWorker.onmessage = (event) => {
+    const { id, type, ...data } = event.data;
+    const callback = pendingCallbacks.get(id);
+    
+    if (callback) {
+      if (type === 'progress') {
+        callback.onProgress?.(data);
+      } else if (type === 'response' || type === 'error') {
+        callback.resolve(data);
+        pendingCallbacks.delete(id);
+      }
     }
-  });
+  };
 
-  try {
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+  ffmpegWorker.onerror = (error) => {
+    console.error('FFmpeg Worker error:', error);
+    pendingCallbacks.forEach(({ reject }) => {
+      reject(new Error('Worker crashed'));
     });
+    pendingCallbacks.clear();
+  };
+
+  return ffmpegWorker;
+};
+
+// Send message to worker with promise-based response
+const sendToWorker = (type, payload, onProgress) => {
+  return new Promise((resolve, reject) => {
+    const worker = initWorker();
+    const id = ++messageId;
+    
+    pendingCallbacks.set(id, { resolve, reject, onProgress });
+    worker.postMessage({ type, payload, id });
+  });
+};
+
+// Load FFmpeg (runs in worker)
+export const loadFFmpeg = async (onProgress) => {
+  if (isLoading) return null;
+  isLoading = true;
+  
+  try {
+    const result = await sendToWorker('LOAD', {}, onProgress);
     isLoading = false;
-    return ffmpeg;
+    return result.success ? true : null;
   } catch (error) {
-    console.error('Failed to load FFmpeg:', error);
     isLoading = false;
-    return null;
+    throw error;
   }
 };
 
+// Check if FFmpeg is loaded
+export const isFFmpegLoaded = () => {
+  return ffmpegWorker !== null;
+};
+
+// Process video with progress tracking
 export const processVideo = async (options, onProgress) => {
   const {
     videoFile,
@@ -47,104 +92,61 @@ export const processVideo = async (options, onProgress) => {
     includeVoiceover = true
   } = settings;
 
-  // Load FFmpeg
-  const ff = await loadFFmpeg((p) => {
-    if (onProgress) onProgress({ stage: 'loading', progress: p });
-  });
-
-  if (!ff) {
-    throw new Error('Failed to load FFmpeg');
+  // Read video file as ArrayBuffer
+  if (onProgress) onProgress({ stage: 'loading', progress: 0, message: 'Loading video...' });
+  
+  const videoData = await fetchFile(videoFile);
+  
+  // Read voiceover if provided
+  let voiceoverData = null;
+  if (includeVoiceover && voiceoverBlob) {
+    voiceoverData = await fetchFile(voiceoverBlob);
   }
 
-  try {
-    // Write video file to FFmpeg filesystem
-    if (onProgress) onProgress({ stage: 'init', progress: 5, message: 'Loading video...' });
-    
-    const videoData = await fetchFile(videoFile);
-    await ff.writeFile('input.mp4', videoData);
-
-    // Prepare FFmpeg arguments
-    const args = ['-i', 'input.mp4'];
-
-    // Resolution scaling
-    const scaleMap = { '720p': '-vf scale=1280:720', '1080p': '-vf scale=1920:1080', '4k': '-vf scale=3840:2160' };
-    if (scaleMap[resolution]) {
-      args.push(...scaleMap[resolution].split(' '));
+  // Send to worker for processing
+  const result = await sendToWorker('PROCESS', {
+    videoData: videoData.buffer,
+    subtitles,
+    voiceoverData: voiceoverData?.buffer,
+    settings: {
+      resolution,
+      quality,
+      includeSubtitles,
+      includeVoiceover
     }
+  }, onProgress);
 
-    // Add subtitles if enabled
-    if (includeSubtitles && subtitles.length > 0) {
-      // Create ASS subtitle file
-      let assContent = `[Script Info]
-Title: Subtitles
-ScriptType: v4.00+
-Collisions: Normal
-PlayDepth: 0
+  if (result.error) {
+    throw new Error(result.error);
+  }
 
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1
+  if (result.cancelled) {
+    throw new Error('Processing cancelled');
+  }
 
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-`;
+  // Create blob from ArrayBuffer
+  return new Blob([result.data], { type: 'video/mp4' });
+};
 
-      subtitles.forEach((sub, i) => {
-        const start = formatASS(sub.startTime);
-        const end = formatASS(sub.endTime);
-        const text = sub.text.replace(/</g, '<').replace(/>/g, '>').replace(/\n/g, '\\N');
-        assContent += `Dialogue: 0,${start},${end},Default,,0,0,0,,${text}\n`;
-      });
-
-      await ff.writeFile('subtitles.ass', new TextEncoder().encode(assContent));
-      args.push('-vf', `ass=subtitles.ass`);
-    }
-
-    // Add voiceover if enabled
-    if (includeVoiceover && voiceoverBlob) {
-      const audioData = await fetchFile(voiceoverBlob);
-      await ff.writeFile('voiceover.mp3', audioData);
-      args.push('-i', 'voiceover.mp3', '-c:a', 'aac', '-b:a', '192k', '-shortest');
-    }
-
-    // Quality settings
-    const crfMap = { low: '28', medium: '23', high: '18' };
-    const crf = crfMap[quality] || '23';
-    args.push('-c:v', 'libx264', '-crf', crf, '-preset', 'medium');
-
-    // Output
-    args.push('-y', 'output.mp4');
-
-    // Execute FFmpeg
-    if (onProgress) onProgress({ stage: 'processing', progress: 20, message: 'Processing video...' });
-    
-    await ff.exec(args);
-
-    // Read output
-    if (onProgress) onProgress({ stage: 'complete', progress: 100, message: 'Complete!' });
-    
-    const data = await ff.readFile('output.mp4');
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-
-    // Cleanup
-    await ff.deleteFile('input.mp4');
-    await ff.deleteFile('output.mp4');
-    if (includeSubtitles) await ff.deleteFile('subtitles.ass');
-    if (includeVoiceover) await ff.deleteFile('voiceover.mp3');
-
-    return blob;
-  } catch (error) {
-    console.error('Video processing error:', error);
-    throw error;
+// Cancel current processing
+export const cancelProcessing = () => {
+  if (ffmpegWorker) {
+    sendToWorker('CANCEL', {});
   }
 };
 
-const formatASS = (seconds) => {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  const ms = Math.round((seconds % 1) * 100);
-  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+// Cleanup worker
+export const destroyWorker = () => {
+  if (ffmpegWorker) {
+    ffmpegWorker.terminate();
+    ffmpegWorker = null;
+  }
 };
 
-export default { loadFFmpeg, processVideo };
+export default {
+  loadFFmpeg,
+  processVideo,
+  isFFmpegLoaded,
+  cancelProcessing,
+  destroyWorker
+};

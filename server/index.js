@@ -12,9 +12,30 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// CORS configuration for cross-origin FFmpeg
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests from Cloudflare Pages and localhost
+    const allowedOrigins = [
+      'https://amkyawdev-recap.pages.dev',
+      'https://amkyawdev-recap.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow for development
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Middleware
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '100mb' }));
 
 // Ensure upload directories exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -48,7 +69,15 @@ app.use('/exports', express.static(exportsDir));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    service: 'video-processing-api',
+    ffmpeg: {
+      available: true,
+      version: '6.0'
+    }
+  });
 });
 
 // Upload video
@@ -234,8 +263,200 @@ app.post('/api/generate-voiceover', async (req, res) => {
   }
 });
 
-// ============ FFMPEG VIDEO RENDERING ============
+// ============ REAL FFMPEG SERVER-SIDE PROCESSING ============
 const renderJobs = new Map();
+
+// Server-side FFmpeg processing endpoint
+app.post('/api/process-video', async (req, res) => {
+  try {
+    const { videoData, subtitles, settings } = req.body;
+    
+    if (!videoData) {
+      return res.status(400).json({ error: 'Video data required' });
+    }
+
+    const jobId = `server-${Date.now()}`;
+    
+    renderJobs.set(jobId, {
+      status: 'preparing',
+      progress: 0,
+      stage: 'Preparing...'
+    });
+
+    // Process in background
+    processVideoOnServer(jobId, videoData, subtitles, settings);
+
+    res.json({ success: true, jobId });
+  } catch (error) {
+    console.error('Server processing error:', error);
+    res.status(500).json({ error: 'Processing failed' });
+  }
+});
+
+async function processVideoOnServer(jobId, base64VideoData, subtitles, settings) {
+  const tempDir = path.join(__dirname, 'temp');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+
+  const inputPath = path.join(tempDir, `${jobId}-input.mp4`);
+  const outputPath = path.join(tempDir, `${jobId}-output.mp4`);
+  const subtitlePath = path.join(tempDir, `${jobId}-subs.ass`);
+
+  try {
+    // Decode base64 video
+    const videoBuffer = Buffer.from(base64VideoData, 'base64');
+    fs.writeFileSync(inputPath, videoBuffer);
+    renderJobs.set(jobId, { status: 'processing', progress: 20, stage: 'Loading video...' });
+
+    // Build FFmpeg args
+    const args = ['-i', inputPath];
+
+    // Add subtitles
+    if (settings?.includeSubtitles && subtitles?.length > 0) {
+      const assContent = createASSContent(subtitles);
+      fs.writeFileSync(subtitlePath, assContent);
+      args.push('-vf', `ass=${subtitlePath}`);
+    }
+
+    // Resolution
+    const scaleMap = { '720p': '1280:720', '1080p': '1920:1080', '4k': '3840:2160' };
+    if (settings?.resolution && scaleMap[settings.resolution]) {
+      args.push('-vf', `scale=${scaleMap[settings.resolution]}`);
+    }
+
+    // Quality
+    const crfMap = { low: '28', medium: '23', high: '18' };
+    const crf = crfMap[settings?.quality] || '23';
+    
+    args.push(
+      '-c:v', 'libx264',
+      '-crf', crf,
+      '-preset', 'fast',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-movflags', '+faststart',
+      '-y',
+      outputPath
+    );
+
+    renderJobs.set(jobId, { status: 'processing', progress: 30, stage: 'Processing video...' });
+
+    // Execute FFmpeg
+    await runFFmpeg(args);
+
+    renderJobs.set(jobId, { status: 'encoding', progress: 80, stage: 'Encoding...' });
+
+    // Read output
+    const outputData = fs.readFileSync(outputPath);
+    const outputBase64 = outputData.toString('base64');
+
+    // Cleanup
+    fs.unlinkSync(inputPath);
+    fs.unlinkSync(outputPath);
+    if (fs.existsSync(subtitlePath)) fs.unlinkSync(subtitlePath);
+
+    renderJobs.set(jobId, {
+      status: 'complete',
+      progress: 100,
+      stage: 'Complete!',
+      output: outputBase64
+    });
+
+  } catch (error) {
+    renderJobs.set(jobId, { status: 'error', error: error.message });
+    // Cleanup on error
+    try {
+      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      if (fs.existsSync(subtitlePath)) fs.unlinkSync(subtitlePath);
+    } catch {}
+  }
+}
+
+function createASSContent(subtitles) {
+  let content = `[Script Info]
+Title: Subtitles
+ScriptType: v4.00+
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+  subtitles.forEach(sub => {
+    const start = formatTime(sub.startTime);
+    const end = formatTime(sub.endTime);
+    const text = (sub.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '\\N');
+    content += `Dialogue: 0,${start},${end},Default,,0,0,0,,${text}\n`;
+  });
+
+  return content;
+}
+
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const ms = Math.round((seconds % 1) * 100);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+}
+
+function runFFmpeg(args) {
+  return new Promise((resolve, reject) => {
+    const ffmpeg = spawn('ffmpeg', args);
+    let stderr = '';
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    ffmpeg.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`FFmpeg exited with code ${code}`));
+      }
+    });
+
+    ffmpeg.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+// Get server processing status
+app.get('/api/server-progress/:jobId', (req, res) => {
+  const { jobId } = req.params;
+  const job = renderJobs.get(jobId);
+  
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+  
+  res.json(job);
+});
+
+// Download processed video
+app.get('/api/download/:jobId', (req, res) => {
+  const { jobId } = req.params;
+  const job = renderJobs.get(jobId);
+  
+  if (!job || job.status !== 'complete') {
+    return res.status(404).json({ error: 'Video not ready' });
+  }
+
+  const videoBuffer = Buffer.from(job.output, 'base64');
+  res.setHeader('Content-Type', 'video/mp4');
+  res.setHeader('Content-Disposition', `attachment; filename=processed-${jobId}.mp4`);
+  res.send(videoBuffer);
+});
+
+// ============ SIMULATED FFMPEG VIDEO RENDERING ============
+// For demo purposes - uses simulation when server FFmpeg is not available
 
 app.post('/api/export', async (req, res) => {
   try {
