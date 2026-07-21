@@ -4,7 +4,7 @@ A browser-based video editing tool that transforms movies into compelling recap 
 
 [![Deploy with Cloudflare](https://deploy.pages.cloudflare.com/button.svg)](https://dash.cloudflare.com/?to=/:workers/pages/new)
 
-![Interface Preview](public/images/demo1.svg)
+![Interface Preview](public/images/ui-upload.png)
 
 ## ✨ Features
 
@@ -28,13 +28,13 @@ A browser-based video editing tool that transforms movies into compelling recap 
 ## 📸 Screenshots
 
 ### Video Upload & Preview
-![Upload](public/images/demo1.svg)
+![Upload](public/images/ui-upload.png)
 
-### AI Processing Pipeline
-![Processing](public/images/demo2.svg)
+### Video Editor
+![Editor](public/images/ui-editor.png)
 
-### Export Settings
-![Export](public/images/demo3.svg)
+### Settings & API Configuration
+![Settings](public/images/ui-settings.png)
 
 ## 🛠️ Installation
 
@@ -71,9 +71,9 @@ npm run dev:full
 amkyawdev-recap/
 ├── public/
 │   └── images/
-│       ├── demo1.svg         # Upload interface screenshot
-│       ├── demo2.svg         # AI processing screenshot
-│       └── demo3.svg         # Export settings screenshot
+│       ├── ui-upload.png     # Upload interface screenshot
+│       ├── ui-editor.png     # Video editor screenshot
+│       └── ui-settings.png   # Settings screenshot
 ├── server/
 │   └── index.js              # Express API server
 ├── src/
@@ -86,6 +86,8 @@ amkyawdev-recap/
 │   │   ├── SubtitleEditor.jsx # Subtitle list with edit capability
 │   │   ├── ProcessingModal.jsx # Progress overlay modal
 │   │   ├── ToastContainer.jsx # Toast notifications
+│   │   ├── AIAssistant.jsx   # AI helper panel
+│   │   ├── ExportModal.jsx   # Export settings modal
 │   │   └── Footer.jsx        # Status bar
 │   ├── store/
 │   │   └── useAppStore.js    # Zustand state management
