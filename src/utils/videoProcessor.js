@@ -3,6 +3,9 @@
  * Browser-based processing with server fallback
  */
 
+// Vercel backend URL from Cloudflare secret
+const API_BASE = import.meta.env.VITE_API_URL || 'https://amkyawdev-recap.vercel.app/api';
+
 // Check if we're in a browser environment with Worker support
 const isWorkerSupported = typeof Worker !== 'undefined' && 
   typeof URL !== 'undefined' && 
@@ -122,7 +125,7 @@ export const processVideo = async (options, onProgress) => {
     if (onProgress) onProgress({ stage: 'processing', progress: 20, message: 'Sending to server...' });
 
     // Call Vercel backend API with FFmpeg
-    const response = await fetch('https://amkyawdev-recap.vercel.app/api/process-video', {
+    const response = await fetch(`${API_BASE}/process-video`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -168,11 +171,10 @@ export const processVideo = async (options, onProgress) => {
 async function pollForResult(jobId, onProgress) {
   const maxAttempts = 60;
   let attempts = 0;
-  const serverUrl = 'https://amkyawdev-recap.vercel.app';
   
   while (attempts < maxAttempts) {
     try {
-      const response = await fetch(`${serverUrl}/api/server-progress/${jobId}`);
+      const response = await fetch(`${API_BASE}/server-progress/${jobId}`);
       const result = await response.json();
       
       if (result.status === 'complete') {
