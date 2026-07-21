@@ -113,7 +113,9 @@ export const processVideo = async (options, onProgress) => {
     resolution = '1080p',
     quality = 'medium',
     includeSubtitles = true,
-    includeVoiceover = true
+    includeVoiceover = true,
+    segments = [],
+    subtitleStyle = 'fade'
   } = settings;
 
   if (onProgress) onProgress({ stage: 'loading', progress: 10, message: 'Preparing video...' });
@@ -135,7 +137,9 @@ export const processVideo = async (options, onProgress) => {
           resolution,
           quality,
           includeSubtitles,
-          includeVoiceover
+          includeVoiceover,
+          segments,
+          subtitleStyle
         }
       })
     });

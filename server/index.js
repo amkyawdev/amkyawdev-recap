@@ -308,21 +308,75 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
   const inputPath = path.join(tempDir, `${jobId}-input.mp4`);
   const outputPath = path.join(tempDir, `${jobId}-output.mp4`);
   const subtitlePath = path.join(tempDir, `${jobId}-subs.ass`);
+  const concatListPath = path.join(tempDir, `${jobId}-list.txt`);
 
   try {
     // Decode base64 video
     const videoBuffer = Buffer.from(base64VideoData, 'base64');
     fs.writeFileSync(inputPath, videoBuffer);
-    renderJobs.set(jobId, { status: 'processing', progress: 20, stage: 'Loading video...' });
+    renderJobs.set(jobId, { status: 'processing', progress: 10, stage: 'Loading video...' });
 
-    // Build FFmpeg args
-    const args = ['-i', inputPath];
+    // Check if we have video segments to cut
+    const segments = settings?.segments || [];
+    
+    let finalOutputPath = outputPath;
+    
+    if (segments.length > 0) {
+      // Multiple segments - need to cut and concatenate
+      renderJobs.set(jobId, { status: 'processing', progress: 20, stage: 'Cutting video segments...' });
+      
+      // Cut each segment
+      const segmentPaths = [];
+      for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        const segPath = path.join(tempDir, `${jobId}-seg${i}.mp4`);
+        segmentPaths.push(segPath);
+        
+        // Cut segment using FFmpeg
+        const cutArgs = [
+          '-ss', String(seg.start),
+          '-i', inputPath,
+          '-t', String(seg.end - seg.start),
+          '-c', 'copy',
+          '-y', segPath
+        ];
+        await runFFmpeg(cutArgs);
+        
+        renderJobs.set(jobId, { status: 'processing', progress: 20 + Math.round((i + 1) / segments.length * 30), stage: `Cutting segment ${i + 1}/${segments.length}...` });
+      }
+      
+      // Create concat list
+      const concatList = segmentPaths.map(p => `file '${p}'`).join('\n');
+      fs.writeFileSync(concatListPath, concatList);
+      
+      // Concatenate segments
+      const concatPath = path.join(tempDir, `${jobId}-concat.mp4`);
+      const concatArgs = [
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', concatListPath,
+        '-c', 'copy',
+        '-y', concatPath
+      ];
+      await runFFmpeg(concatArgs);
+      
+      // Use concatenated video as input
+      finalOutputPath = concatPath;
+      
+      // Cleanup segment files
+      segmentPaths.forEach(p => { try { fs.unlinkSync(p); } catch {} });
+      try { fs.unlinkSync(concatListPath); } catch {}
+    }
 
-    // Add subtitles at bottom
+    // Build FFmpeg args for final output
+    const args = ['-i', finalOutputPath];
+
+    // Add subtitles at bottom with animation
     if (settings?.includeSubtitles && subtitles?.length > 0) {
-      const assContent = createASSContent(subtitles);
+      renderJobs.set(jobId, { status: 'processing', progress: 60, stage: 'Adding subtitles...' });
+      const assContent = createASSContent(subtitles, settings.subtitleStyle);
       fs.writeFileSync(subtitlePath, assContent);
-      // Force subtitles to bottom (Alignment=2) with bottom margin
+      // Force subtitles to bottom with animation style
       args.push('-vf', `ass=${subtitlePath}:force_style='Alignment=2,MarginV=30'`);
     }
 
@@ -347,12 +401,12 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
       outputPath
     );
 
-    renderJobs.set(jobId, { status: 'processing', progress: 30, stage: 'Processing video...' });
+    renderJobs.set(jobId, { status: 'processing', progress: 70, stage: 'Processing video...' });
 
     // Execute FFmpeg
     await runFFmpeg(args);
 
-    renderJobs.set(jobId, { status: 'encoding', progress: 80, stage: 'Encoding...' });
+    renderJobs.set(jobId, { status: 'encoding', progress: 90, stage: 'Encoding...' });
 
     // Read output
     const outputData = fs.readFileSync(outputPath);
@@ -362,6 +416,9 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
     fs.unlinkSync(inputPath);
     fs.unlinkSync(outputPath);
     if (fs.existsSync(subtitlePath)) fs.unlinkSync(subtitlePath);
+    if (finalOutputPath !== outputPath) {
+      try { fs.unlinkSync(finalOutputPath); } catch {}
+    }
 
     renderJobs.set(jobId, {
       status: 'complete',
@@ -377,19 +434,34 @@ async function processVideoOnServer(jobId, base64VideoData, subtitles, settings)
       if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
       if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
       if (fs.existsSync(subtitlePath)) fs.unlinkSync(subtitlePath);
+      if (fs.existsSync(concatListPath)) fs.unlinkSync(concatListPath);
     } catch {}
   }
 }
 
-function createASSContent(subtitles) {
-  // Style: Alignment=2 means bottom center, MarginV=30 pushes it up from bottom
+function createASSContent(subtitles, style = 'fade') {
+  // Animation styles for subtitles
+  const animations = {
+    fade: { fadein: '50', fadeout: '50' },      // Fade in/out
+    typewriter: { karaoke: '1' },                // Typewriter effect  
+    slide: { scroll: 'up:5;' },                  // Slide up
+    bounce: {}                                    // No animation (bouncy style)
+  };
+  
+  const anim = animations[style] || animations.fade;
+  
+  // Convert hex color to ASS format (BGR)
+  const primaryColor = '&H00FFFFFF';
+  const outlineColor = '&H00000000';
+  const backColor = '&H00000000';
+  
   let content = `[Script Info]
 Title: Subtitles
 ScriptType: v4.00+
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1
+Style: Default,Arial,48,${primaryColor},${outlineColor},${outlineColor},${backColor},-1,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -399,8 +471,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     const start = formatTime(sub.startTime);
     const end = formatTime(sub.endTime);
     const text = (sub.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '\\N');
-    // MarginV=30 pushes subtitle up from bottom
-    content += `Dialogue: 0,${start},${end},Default,,0,0,30,,${text}\n`;
+    
+    // Add effect based on style
+    let effect = '';
+    if (style === 'fade' && anim.fadein) {
+      effect = `{\\fad(${anim.fadein},${anim.fadeout})}`;
+    } else if (style === 'typewriter' && anim.karaoke) {
+      effect = `{\\k${anim.karaoke}}`;
+    } else if (style === 'slide' && anim.scroll) {
+      effect = `{\\move(0,${-anim.scroll.includes('up') ? '20' : '0'},0,0)}`;
+    }
+    
+    content += `Dialogue: 0,${start},${end},Default,,0,0,30,,${effect}${text}\n`;
   });
 
   return content;

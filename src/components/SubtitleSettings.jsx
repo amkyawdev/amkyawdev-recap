@@ -2,7 +2,7 @@ import { useState } from 'react';
 import useAppStore from '../store/useAppStore';
 
 export default function SubtitleSettings() {
-  const { subtitles, setSubtitles, addToast } = useAppStore();
+  const { subtitles, setSubtitles, addToast, subtitleStyle, setSubtitleStyle } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
   
   // Subtitle styling settings
@@ -255,6 +255,42 @@ export default function SubtitleSettings() {
             }}>
               Sample Subtitle
             </span>
+          </div>
+
+          {/* Animation Style */}
+          <div>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Animation Effect
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+              {[
+                { id: 'fade', name: 'Fade', icon: 'bi-sunrise' },
+                { id: 'typewriter', name: 'Typewriter', icon: 'bi-keyboard' },
+                { id: 'slide', name: 'Slide', icon: 'bi-arrow-right' },
+                { id: 'bounce', name: 'Bounce', icon: 'bi-activity' }
+              ].map(anim => (
+                <button
+                  key={anim.id}
+                  onClick={() => setSubtitleStyle(anim.id)}
+                  style={{
+                    padding: '8px 4px',
+                    background: subtitleStyle === anim.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    color: subtitleStyle === anim.id ? '#fff' : 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className={`bi ${anim.icon}`}></i>
+                  {anim.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Apply Button */}

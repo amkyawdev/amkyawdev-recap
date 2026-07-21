@@ -3,7 +3,14 @@ import useAppStore from '../store/useAppStore';
 import { processVideo } from '../utils/videoProcessor';
 
 export default function ExportModal({ isOpen, onClose }) {
-  const { videoFile, subtitles, addToast } = useAppStore();
+  const { 
+    videoFile, 
+    subtitles, 
+    addToast, 
+    videoSegments, 
+    exportSettings,
+    subtitleStyle 
+  } = useAppStore();
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('idle');
   const [downloadUrl, setDownloadUrl] = useState(null);
@@ -11,6 +18,7 @@ export default function ExportModal({ isOpen, onClose }) {
   const [stages] = useState([
     { id: 'load', name: 'Loading FFmpeg...', icon: 'bi-hourglass-split' },
     { id: 'init', name: 'Initializing...', icon: 'bi-gear' },
+    { id: 'cutting', name: 'Cutting segments...', icon: 'bi-scissors' },
     { id: 'video', name: 'Processing video...', icon: 'bi-film' },
     { id: 'subtitles', name: 'Adding subtitles...', icon: 'bi-text-left' },
     { id: 'encoding', name: 'Encoding...', icon: 'bi bi-filetype-mp4' },
@@ -34,10 +42,12 @@ export default function ExportModal({ isOpen, onClose }) {
         videoFile,
         subtitles,
         settings: {
-          resolution: '1080p',
-          quality: 'medium',
-          includeSubtitles: true,
-          includeVoiceover: false
+          resolution: exportSettings?.resolution || '1080p',
+          quality: exportSettings?.quality || 'medium',
+          includeSubtitles: exportSettings?.includeSubtitles ?? true,
+          includeVoiceover: exportSettings?.includeVoiceover ?? true,
+          segments: videoSegments || [],
+          subtitleStyle: subtitleStyle || 'fade'
         }
       }, ({ stage, progress: p, message }) => {
         setCurrentStage(stage);

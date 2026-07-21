@@ -26,6 +26,18 @@ const useAppStore = create((set, get) => ({
   setVideo: (file, url, meta) => set({ videoFile: file, videoUrl: url, videoMeta: meta }),
   clearVideo: () => set({ videoFile: null, videoUrl: null, videoMeta: { duration: 0, width: 0, height: 0 } }),
 
+  // Video Editing - Clips/Segments
+  videoSegments: [],
+  setVideoSegments: (segments) => set({ videoSegments: segments }),
+  addVideoSegment: (start, end) => {
+    const segments = get().videoSegments;
+    set({ videoSegments: [...segments, { id: Date.now(), start, end }] });
+  },
+  removeVideoSegment: (id) => {
+    set({ videoSegments: get().videoSegments.filter(s => s.id !== id) });
+  },
+  clearVideoSegments: () => set({ videoSegments: [] }),
+
   // Playback State
   isPlaying: false,
   currentTime: 0,
@@ -41,10 +53,19 @@ const useAppStore = create((set, get) => ({
   voiceover: null,
   script: '',
   selectedVoice: 'thita',
+  // Subtitle effects
+  subtitleStyle: 'fade', // fade, typewriter, slide, bounce
+  subtitleColor: '#FFFFFF',
+  subtitleBg: 'rgba(0,0,0,0.5)',
+  subtitleFontSize: 48,
   setSubtitles: (subs) => set({ subtitles: subs }),
   setVoiceover: (vo) => set({ voiceover: vo }),
   setScript: (script) => set({ script: script }),
   setSelectedVoice: (voice) => set({ selectedVoice: voice }),
+  setSubtitleStyle: (style) => set({ subtitleStyle: style }),
+  setSubtitleColor: (color) => set({ subtitleColor: color }),
+  setSubtitleBg: (bg) => set({ subtitleBg: bg }),
+  setSubtitleFontSize: (size) => set({ subtitleFontSize: size }),
 
   // Processing State
   processingStatus: 'idle', // idle, analyzing, generating, rendering
