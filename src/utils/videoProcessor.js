@@ -97,7 +97,7 @@ export const isFFmpegLoaded = () => {
   return ffmpegWorker !== null;
 };
 
-// Process video with progress tracking - uses server-side processing
+// Process video with progress tracking - uses local server with FFmpeg
 export const processVideo = async (options, onProgress) => {
   const {
     videoFile,
@@ -113,17 +113,16 @@ export const processVideo = async (options, onProgress) => {
     includeVoiceover = true
   } = settings;
 
-  // Try server-side processing first (works on Cloudflare Pages)
   if (onProgress) onProgress({ stage: 'loading', progress: 10, message: 'Preparing video...' });
 
   try {
-    // Convert video to base64 for server processing
+    // Convert video to base64 for local server processing
     const videoBase64 = await fileToBase64(videoFile);
     
-    if (onProgress) onProgress({ stage: 'processing', progress: 30, message: 'Processing video...' });
+    if (onProgress) onProgress({ stage: 'processing', progress: 20, message: 'Sending to server...' });
 
-    // Call server API
-    const response = await fetch('/api/process-video', {
+    // Call local server API with FFmpeg
+    const response = await fetch('http://localhost:3001/api/process-video', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -144,7 +143,7 @@ export const processVideo = async (options, onProgress) => {
 
     const result = await response.json();
     
-    if (onProgress) onProgress({ stage: 'encoding', progress: 70, message: 'Encoding...' });
+    if (onProgress) onProgress({ stage: 'encoding', progress: 50, message: 'Processing video...' });
 
     if (result.jobId) {
       // Poll for completion
@@ -152,7 +151,7 @@ export const processVideo = async (options, onProgress) => {
       return base64ToBlob(finalResult.output, 'video/mp4');
     }
 
-    // Fallback: return original video if no processing needed
+    // Fallback: return original video
     if (onProgress) onProgress({ stage: 'complete', progress: 100 });
     return videoFile;
     
@@ -169,10 +168,11 @@ export const processVideo = async (options, onProgress) => {
 async function pollForResult(jobId, onProgress) {
   const maxAttempts = 60;
   let attempts = 0;
+  const serverUrl = 'http://localhost:3001';
   
   while (attempts < maxAttempts) {
     try {
-      const response = await fetch(`/api/server-progress/${jobId}`);
+      const response = await fetch(`${serverUrl}/api/server-progress/${jobId}`);
       const result = await response.json();
       
       if (result.status === 'complete') {

@@ -5,12 +5,17 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// FFmpeg path from installer
+const ffmpegPath = ffmpegInstaller.path;
+const ffmpegVersion = ffmpegInstaller.version;
 
 // CORS configuration for cross-origin FFmpeg
 const corsOptions = {
@@ -75,7 +80,8 @@ app.get('/api/health', (req, res) => {
     service: 'video-processing-api',
     ffmpeg: {
       available: true,
-      version: '6.0'
+      version: ffmpegVersion,
+      path: ffmpegPath
     }
   });
 });
@@ -407,7 +413,8 @@ function formatTime(seconds) {
 
 function runFFmpeg(args) {
   return new Promise((resolve, reject) => {
-    const ffmpeg = spawn('ffmpeg', args);
+    // Use installed FFmpeg path
+    const ffmpeg = spawn(ffmpegPath, args);
     let stderr = '';
 
     ffmpeg.stderr.on('data', (data) => {
