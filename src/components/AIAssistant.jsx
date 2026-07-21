@@ -1,17 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, ShieldAlert, ChevronDown, Mail, Globe } from 'lucide-react';
+import { chatWithAI, SYSTEM_PROMPTS } from '../utils/aiService';
+import useAppStore from '../store/useAppStore';
 
 const INITIAL_MESSAGE = {
   role: 'assistant',
-  content: `👋 Hi! I'm your AmkyawDev Recap assistant powered by Zhipu AI.
+  content: `👋 Welcome to AmkyawDev Recap!
 
-I can help you with:
-• Video editing features
-• AI tools (Gemini, OpenAI, Whisper, ElevenLabs)
-• Video processing & export
-• Troubleshooting
+I'm your AI assistant for video recap creation. Here's what I can help you with:
 
-Ask me anything about movie editing!`
+**Getting Started:**
+1. Upload a video (MP4, MOV, AVI, WebM, MKV - up to 2GB)
+2. Enter your API keys in Settings
+3. Use AI tools to analyze, generate scripts, and create voiceovers
+
+**AI Features:**
+• Gemini AI - Video scene analysis
+• OpenAI - Script generation  
+• ElevenLabs - Natural voiceover
+• Whisper - Audio transcription
+
+Ask me anything about movie editing or the app features!`
 };
 
 // Simple markdown parser
@@ -40,6 +49,8 @@ export default function AIAssistant() {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  
+  const apiKeys = useAppStore(state => state.apiKeys);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,23 +102,13 @@ export default function AIAssistant() {
     setError(null);
     
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
-      });
-      
-      const data = await response.json();
-      
-      let responseText = '';
-      if (data.success && data.message) {
-        responseText = data.message;
-      } else if (data.fallbackMessage) {
-        responseText = data.fallbackMessage;
-        if (data.error) setError(data.error);
-      } else {
-        throw new Error(data.error || 'Failed to get response');
-      }
+      // Use AI service for chat
+      const allMessages = [...messages, userMessage];
+      const responseText = await chatWithAI(
+        allMessages,
+        apiKeys.openai,
+        (progress) => console.log('Chat progress:', progress)
+      );
       
       setIsTyping(false);
       
@@ -118,12 +119,12 @@ export default function AIAssistant() {
       
     } catch (err) {
       console.error('Chat error:', err);
-      setError(err.message);
-      const response = getKeywordResponse(input);
       setIsTyping(false);
-      const assistantMessage = { role: 'assistant', content: response };
-      setMessages(prev => [...prev, assistantMessage]);
-      animateText(response);
+      setError(err.message);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again or check your API key settings.' 
+      }]);
     }
   };
 
