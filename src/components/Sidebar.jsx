@@ -22,7 +22,9 @@ export default function Sidebar() {
     setProcessingProgress,
     setProcessingStage,
     selectedVoice,
-    setSelectedVoice
+    setSelectedVoice,
+    currentProject,
+    setCurrentProject
   } = useAppStore();
 
   const [collapsed, setCollapsed] = useState(true);
@@ -85,7 +87,7 @@ export default function Sidebar() {
       );
       
       // Store analysis results
-      useAppStore.setState({ currentProject: { ...useAppStore.getState().currentProject, analysis } });
+      setCurrentProject({ ...currentProject, analysis });
       
       setProcessingStatus('idle');
       addToast({ type: 'success', message: 'Video analysis complete! Detected ' + analysis.scenes?.length + ' scenes' });
@@ -156,7 +158,7 @@ export default function Sidebar() {
       addToast({ type: 'error', message: 'Please enter OpenAI API Key first' });
       return;
     }
-    if (!videoFile && !useAppStore.getState().currentProject?.analysis) {
+    if (!videoFile && !currentProject?.analysis) {
       addToast({ type: 'error', message: 'Please analyze video first' });
       return;
     }
@@ -166,7 +168,7 @@ export default function Sidebar() {
     addToast({ type: 'info', message: 'Generating script with OpenAI...' });
     
     try {
-      const analysis = useAppStore.getState().currentProject?.analysis || {
+      const analysis = currentProject?.analysis || {
         scenes: [
           { start: 0, end: 30, description: 'Opening scene', importance: 'high' },
           { start: 30, end: 60, description: 'Introduction', importance: 'medium' },
